@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+node_modules/
+dist/
+*.key
+*.tsbuildinfo
+.deploy.md
+.atl/
+.wrangler/

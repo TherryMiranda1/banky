@@ -1,0 +1,16 @@
+{
+  "name": "Banky",
+  "short_name": "Banky",
+  "description": "Personal Banking Dashboard via Open Banking",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "icons": [
+    {
+      "src": "/Banky.jpg",
+      "sizes": "192x192 512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
