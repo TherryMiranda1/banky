@@ -4,10 +4,16 @@
 @theme {
   --color-bg: #0a0a0f;
   --color-surface: #13131a;
+  --color-surface-elevated: #1a1a24;
+  --color-surface-active: #1e2030;
   --color-border: #1e1e2e;
   --color-text: #e8e8f0;
   --color-muted: #6b6b80;
   --color-accent: #00e5a0;
+  --color-positive: #10b981;
+  --color-income: #10b981;
+  --color-expense: #f43f5e;
+  --color-transfer: #38bdf8;
   --color-negative: #ff4d6a;
   --color-bank-santander: #ec0000;
   --color-bank-revolut: #191c3a;

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.js";
 import { Lock, Mail, ArrowRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { BankyLogo } from "@/components/ui/BankyLogo";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -58,11 +59,9 @@ export const LoginPage: React.FC = () => {
       <div className="m-auto w-full max-w-md relative z-10 py-6">
         <div className="text-center mb-6">
           <div className="inline-flex justify-center items-center gap-3 mb-4">
-            <img
-              src="/B-logo.jpg"
-              alt="Banky"
-              className="w-12 h-12 rounded-xl object-cover border border-border shadow-lg shadow-accent/10"
-            />
+            <div className="w-12 h-12 rounded-xl bg-surface border border-border flex items-center justify-center shadow-lg shadow-accent/10 p-2">
+              <BankyLogo size={36} />
+            </div>
             <span className="text-3xl font-bold tracking-tight text-text font-sans">Banky</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-text">
@@ -166,7 +165,7 @@ export const LoginPage: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 border-t border-border/80 pt-5 text-center">
+          <div className="mt-6 border-t border-border/80 pt-5 text-center space-y-2">
             <p className="text-xs sm:text-sm text-muted">
               ¿No tienes una cuenta aún?{" "}
               <Link
@@ -176,6 +175,14 @@ export const LoginPage: React.FC = () => {
                 Crear cuenta nueva
               </Link>
             </p>
+            <div>
+              <Link
+                to="/landing"
+                className="text-xs text-muted hover:text-text transition-colors"
+              >
+                Conoce la arquitectura y despliegue &rarr;
+              </Link>
+            </div>
           </div>
         </div>
       </div>

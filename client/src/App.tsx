@@ -5,6 +5,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Layout } from "@/components/ui/Layout";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
+import { LandingPage } from "@/pages/LandingPage";
 import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { Connect } from "@/pages/Connect";
@@ -30,7 +31,9 @@ const AppContent: React.FC = () => {
 
   return (
     <Routes>
-      {/* Public Auth Routes */}
+      {/* Public Routes */}
+      <Route path="/landing" element={<LandingPage />} />
+      <Route path="/welcome" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route

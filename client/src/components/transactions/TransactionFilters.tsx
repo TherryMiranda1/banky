@@ -1,5 +1,5 @@
 import React from "react";
-import { Filter, X, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Layers, FileSpreadsheet, Download } from "lucide-react";
+import { Filter, X, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Layers } from "lucide-react";
 import { CategoryDropdown } from "@/components/categories/CategoryDropdown";
 import { CategoryItem } from "@/lib/api/categories";
 
@@ -30,81 +30,80 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
   onToChange,
   onCategoryChange,
   onTypeChange,
-  onReset,
-  onExportExcel
+  onReset
 }) => {
   const hasActiveFilters = Boolean(
     fromDate || toDate || selectedCategory || (selectedType && selectedType !== "all")
   );
 
   return (
-    <div className="p-2 sm:p-2.5 rounded-xl bg-surface/80 border border-border/70 flex flex-wrap items-center justify-between gap-2.5 text-xs">
-      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-        <div className="flex items-center gap-1 text-muted text-[11px] font-mono shrink-0 pl-1">
-          <Filter className="w-3 h-3 text-accent" />
+    <div className="p-2 sm:p-3 rounded-2xl bg-surface/60 border border-border/60 flex flex-wrap items-center justify-between gap-3 text-xs backdrop-blur-sm">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 text-muted text-[11px] font-mono shrink-0 pl-1">
+          <Filter className="w-3.5 h-3.5 text-accent" />
           <span className="hidden sm:inline">Filtros:</span>
         </div>
 
         {/* Type Filter Segmented Control */}
         {onTypeChange && (
-          <div className="flex items-center bg-bg/80 p-0.5 rounded-lg border border-border/70 shrink-0">
+          <div className="flex items-center bg-bg/80 p-0.5 rounded-xl border border-border/60 shrink-0">
             <button
               type="button"
               onClick={() => onTypeChange("all")}
-              className={`px-2 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
                 selectedType === "all"
-                  ? "bg-surface text-accent font-semibold shadow-xs border border-border/60"
+                  ? "bg-surface text-text font-semibold shadow-xs border border-border/70"
                   : "text-muted hover:text-text"
               }`}
             >
-              <Layers className="w-2.5 h-2.5" />
+              <Layers className="w-3 h-3" />
               <span>Todos</span>
             </button>
 
             <button
               type="button"
               onClick={() => onTypeChange("income")}
-              className={`px-2 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
                 selectedType === "income"
                   ? "bg-accent/15 text-accent font-semibold shadow-xs border border-accent/40"
                   : "text-muted hover:text-text"
               }`}
             >
-              <ArrowDownLeft className="w-2.5 h-2.5 text-accent" />
+              <ArrowDownLeft className="w-3 h-3 text-accent" />
               <span>Ingresos</span>
             </button>
 
             <button
               type="button"
               onClick={() => onTypeChange("expense")}
-              className={`px-2 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
                 selectedType === "expense"
                   ? "bg-negative/15 text-negative font-semibold shadow-xs border border-negative/40"
                   : "text-muted hover:text-text"
               }`}
             >
-              <ArrowUpRight className="w-2.5 h-2.5 text-negative" />
+              <ArrowUpRight className="w-3 h-3 text-negative" />
               <span>Gastos</span>
             </button>
 
             <button
               type="button"
               onClick={() => onTypeChange("transfer")}
-              className={`px-2 py-1 rounded-md text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all cursor-pointer flex items-center gap-1 ${
                 selectedType === "transfer"
                   ? "bg-sky-500/15 text-sky-400 font-semibold shadow-xs border border-sky-500/40"
                   : "text-muted hover:text-text"
               }`}
             >
-              <ArrowLeftRight className="w-2.5 h-2.5 text-sky-400" />
+              <ArrowLeftRight className="w-3 h-3 text-sky-400" />
               <span>Traspasos</span>
             </button>
           </div>
         )}
 
         {/* Category Dropdown */}
-        <div className="flex items-center gap-1 bg-bg/70 px-1.5 py-0.5 rounded-lg border border-border/60 focus-within:border-accent transition-colors shrink-0">
-          <span className="text-[10px] text-muted font-mono pl-1">Cat:</span>
+        <div className="flex items-center gap-1.5 bg-bg/80 px-2 py-1 rounded-xl border border-border/60 focus-within:border-accent transition-colors shrink-0">
+          <span className="text-[10px] text-muted font-mono">Cat:</span>
           <CategoryDropdown
             value={selectedCategory || null}
             onChange={(catName) => onCategoryChange(catName || "")}
@@ -114,12 +113,12 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
             allowUncategorized={true}
             uncategorizedLabel="Sin categoría"
             size="sm"
-            className="min-w-[120px] sm:min-w-[140px]"
+            className="min-w-[110px] sm:min-w-[130px]"
           />
         </div>
 
-        {/* From Date */}
-        <div className="flex items-center gap-1 bg-bg/70 px-2 py-1 rounded-lg border border-border/60 focus-within:border-accent transition-colors shrink-0">
+        {/* Date Filters */}
+        <div className="flex items-center gap-1 bg-bg/80 px-2 py-1 rounded-xl border border-border/60 focus-within:border-accent transition-colors shrink-0">
           <span className="text-[10px] text-muted font-mono">Desde:</span>
           <input
             id="filter-from-date"
@@ -130,8 +129,7 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
           />
         </div>
 
-        {/* To Date */}
-        <div className="flex items-center gap-1 bg-bg/70 px-2 py-1 rounded-lg border border-border/60 focus-within:border-accent transition-colors shrink-0">
+        <div className="flex items-center gap-1 bg-bg/80 px-2 py-1 rounded-xl border border-border/60 focus-within:border-accent transition-colors shrink-0">
           <span className="text-[10px] text-muted font-mono">Hasta:</span>
           <input
             id="filter-to-date"
@@ -143,31 +141,16 @@ export const TransactionFilters: React.FC<TransactionFiltersProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {onExportExcel && (
-          <button
-            type="button"
-            onClick={onExportExcel}
-            title="Exportar movimientos a Excel / CSV"
-            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-text hover:text-accent transition-colors cursor-pointer px-2.5 py-1 rounded-lg bg-bg/70 border border-border/60 hover:border-accent/40 shadow-xs"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden sm:inline">Exportar Excel</span>
-            <Download className="w-3 h-3 text-muted sm:hidden" />
-          </button>
-        )}
-
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="inline-flex items-center gap-1 text-[11px] font-mono text-muted hover:text-accent transition-colors cursor-pointer px-2 py-1 rounded-lg bg-bg/60 border border-border/40"
-          >
-            <X className="w-3 h-3" />
-            <span>Limpiar</span>
-          </button>
-        )}
-      </div>
+      {hasActiveFilters && (
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-muted hover:text-accent transition-colors cursor-pointer px-2.5 py-1.5 rounded-xl bg-surface/80 border border-border/60 hover:border-accent/40"
+        >
+          <X className="w-3.5 h-3.5" />
+          <span>Limpiar filtros</span>
+        </button>
+      )}
     </div>
   );
 };

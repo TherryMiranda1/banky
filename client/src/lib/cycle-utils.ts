@@ -85,6 +85,24 @@ export function formatCyclePeriod(period: string, cutoffDay = 1): CyclePeriodInf
   };
 }
 
+export function getAdjacentPeriod(basePeriod: string, offset: number): string {
+  const { year, month } = parsePeriod(basePeriod);
+  let targetMonth = month + offset;
+  let targetYear = year;
+
+  while (targetMonth < 1) {
+    targetMonth += 12;
+    targetYear -= 1;
+  }
+
+  while (targetMonth > 12) {
+    targetMonth -= 12;
+    targetYear += 1;
+  }
+
+  return `${targetYear}-${String(targetMonth).padStart(2, "0")}`;
+}
+
 export function generateAdjacentPeriods(
   basePeriod: string,
   pastCount = 5,
