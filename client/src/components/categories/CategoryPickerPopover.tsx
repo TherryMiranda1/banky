@@ -9,6 +9,7 @@ interface CategoryPickerPopoverProps {
   onSelect: (categoryId: string | null, categoryName: string | null) => void;
   currentCategoryName: string | null;
   categoriesList?: CategoryItem[];
+  align?: "left" | "right";
 }
 
 export const CategoryPickerPopover: React.FC<CategoryPickerPopoverProps> = ({
@@ -16,7 +17,8 @@ export const CategoryPickerPopover: React.FC<CategoryPickerPopoverProps> = ({
   onClose,
   onSelect,
   currentCategoryName,
-  categoriesList: initialCategories
+  categoriesList: initialCategories,
+  align = "left"
 }) => {
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories || []);
   const [search, setSearch] = useState("");
@@ -114,7 +116,9 @@ export const CategoryPickerPopover: React.FC<CategoryPickerPopoverProps> = ({
     <div
       ref={popoverRef}
       onKeyDown={handleKeyDown}
-      className="absolute left-0 top-full mt-1.5 z-50 w-64 sm:w-72 bg-surface/98 backdrop-blur-md border border-border/80 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+      className={`absolute top-full mt-1.5 z-50 w-64 sm:w-72 bg-surface/98 backdrop-blur-md border border-border/80 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 ${
+        align === "right" ? "right-0" : "left-0"
+      }`}
     >
       <div className="p-2 border-b border-border/60">
         <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-bg/80 border border-border/80 text-xs">

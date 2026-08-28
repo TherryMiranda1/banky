@@ -192,6 +192,7 @@ export const AccountContextBar: React.FC<AccountContextBarProps> = ({
               allowUncategorized={true}
               uncategorizedLabel="Sin categoría"
               size="sm"
+              dropdownAlign="right"
               className="min-w-[100px]"
             />
           </div>

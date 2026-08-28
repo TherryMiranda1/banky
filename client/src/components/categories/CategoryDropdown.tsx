@@ -78,7 +78,7 @@ export const CategoryDropdown: React.FC<CategoryDropdownProps> = ({
   size = "md",
   disabled = false,
   className = "",
-  dropdownAlign = "left",
+  dropdownAlign = "right",
   id
 }) => {
   const [isOpen, setIsOpen] = useState(false);
