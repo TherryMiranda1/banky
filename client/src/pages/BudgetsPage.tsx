@@ -46,7 +46,7 @@ export const BudgetsPage: React.FC = () => {
   const periodTitle = formatPeriodTitle(period);
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto animate-in fade-in duration-200">
+    <div className="space-y-4 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Toast Notification */}
       <ActionToast
         isOpen={!!toastMessage}
@@ -54,34 +54,34 @@ export const BudgetsPage: React.FC = () => {
         onDismiss={dismissToast}
       />
 
-      {/* Header Bar with Period Navigator */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface p-4 sm:p-5 rounded-2xl border border-border shadow-xs">
+      {/* GitHub Document Header (Canvas Direct) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
             <PieChart className="w-4 h-4 text-accent" />
-            <h1 className="text-base sm:text-lg font-bold tracking-tight text-text">
+            <h1 className="text-xl font-bold tracking-tight text-text">
               Presupuestos & Analíticas
             </h1>
           </div>
           <p className="text-xs text-muted font-mono mt-0.5">
-            Gestión y distribución de gastos por ciclo financiero
+            Distribución y límites de gasto por ciclo financiero
           </p>
         </div>
 
         {/* Period Selector Controls */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="flex items-center bg-bg rounded-xl border border-border p-1 shadow-inner">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-surface-elevated rounded-md border border-border p-0.5">
             <button
               type="button"
               onClick={prevPeriod}
               title="Mes anterior"
-              className="p-1.5 rounded-lg text-muted hover:text-text hover:bg-surface transition-colors cursor-pointer"
+              className="p-1 rounded text-muted hover:text-text transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
-            <div className="px-3 py-1 flex items-center gap-1.5 min-w-[130px] justify-center">
-              <Calendar className="w-3.5 h-3.5 text-accent" />
+            <div className="px-2.5 py-0.5 flex items-center gap-1.5 min-w-[120px] justify-center">
+              <Calendar className="w-3 h-3 text-muted" />
               <span className="font-semibold text-xs font-mono text-text">
                 {periodTitle}
               </span>
@@ -91,9 +91,9 @@ export const BudgetsPage: React.FC = () => {
               type="button"
               onClick={nextPeriod}
               title="Mes siguiente"
-              className="p-1.5 rounded-lg text-muted hover:text-text hover:bg-surface transition-colors cursor-pointer"
+              className="p-1 rounded text-muted hover:text-text transition-colors cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
@@ -102,7 +102,7 @@ export const BudgetsPage: React.FC = () => {
             onClick={refreshData}
             title="Recargar analíticas"
             disabled={isLoading}
-            className="p-2 rounded-xl bg-surface border border-border text-muted hover:text-text hover:border-accent/40 transition-colors cursor-pointer"
+            className="p-1.5 rounded-md bg-surface border border-border text-muted hover:text-text transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-accent" : ""}`} />
           </button>
@@ -111,7 +111,7 @@ export const BudgetsPage: React.FC = () => {
 
       {/* Error Alert */}
       {error && (
-        <div className="p-3.5 rounded-xl bg-negative/10 border border-negative/30 flex items-center gap-2.5 text-negative text-xs">
+        <div className="p-3 rounded-md bg-expense/10 border border-expense/30 flex items-center gap-2 text-expense text-xs font-mono">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -119,19 +119,11 @@ export const BudgetsPage: React.FC = () => {
 
       {/* Loading Skeleton */}
       {isLoading && !analytics && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 rounded-2xl bg-surface/50 animate-pulse border border-border" />
-            ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <div className="lg:col-span-7 space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 rounded-2xl bg-surface/50 animate-pulse border border-border" />
-              ))}
-            </div>
-            <div className="lg:col-span-5 h-64 rounded-2xl bg-surface/50 animate-pulse border border-border" />
+        <div className="space-y-4 animate-pulse">
+          <div className="h-10 rounded-md bg-surface/40 border border-border" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="lg:col-span-7 h-80 rounded-md bg-surface/30 border border-border" />
+            <div className="lg:col-span-5 h-80 rounded-md bg-surface/30 border border-border" />
           </div>
         </div>
       )}
@@ -139,38 +131,33 @@ export const BudgetsPage: React.FC = () => {
       {/* Analytics Loaded Content */}
       {analytics && (
         <>
-          {/* Macro Savings Metrics Cards */}
+          {/* Macro Savings Metrics Bar */}
           <SavingsMacroCard
             summary={analytics.summary}
             dateRangeLabel={analytics.cycleRange.dateRangeLabel}
           />
 
           {/* Main Content Grid: Budgets List (Left) + Donut Analytics (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* Category Budget Progress Bars (7 cols on lg) */}
-            <div className="lg:col-span-7 space-y-3">
-              <div className="flex items-center justify-between pb-1">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
-                    Límites por Categoría
-                  </h2>
-                  <p className="text-[11px] text-muted font-mono">
-                    Modificá el objetivo mensual inline con persistencia histórica
-                  </p>
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+            {/* Category Budget Box Table (7 cols on lg) */}
+            <div className="lg:col-span-7 rounded-md border border-border bg-surface/30 overflow-hidden">
+              <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between">
+                <span className="text-xs font-semibold text-text">
+                  Límites por Categoría
+                </span>
                 <span className="text-xs font-mono text-muted">
                   {analytics.categories.length} categorías
                 </span>
               </div>
 
               {analytics.categories.length === 0 ? (
-                <div className="p-8 text-center bg-surface rounded-2xl border border-border">
-                  <Layers className="w-8 h-8 text-muted mx-auto mb-2" />
-                  <p className="text-xs font-semibold text-text">No hay categorías configuradas</p>
-                  <p className="text-[11px] text-muted font-mono mt-1">Crea categorías para asignar presupuestos mensuales.</p>
+                <div className="p-8 text-center space-y-1 text-muted">
+                  <Layers className="w-6 h-6 mx-auto mb-1 opacity-50" />
+                  <p className="text-xs font-medium text-text">No hay categorías configuradas</p>
+                  <p className="text-[11px] font-mono">Crea categorías para asignar presupuestos mensuales.</p>
                 </div>
               ) : (
-                <div className="space-y-2.5">
+                <div className="divide-y divide-border/40">
                   {analytics.categories.map((cat) => (
                     <BudgetProgressBar
                       key={cat.categoryId}
@@ -185,21 +172,23 @@ export const BudgetsPage: React.FC = () => {
             </div>
 
             {/* Graphic Distribution & Uncategorized Summary (5 cols on lg) */}
-            <div className="lg:col-span-5 space-y-3.5 sticky top-20">
-              <CategoryDonutChart
-                categories={analytics.categories}
-                uncategorizedSpent={analytics.uncategorized.spentAmount}
-                totalSpent={analytics.summary.totalSpent}
-                period={period}
-              />
+            <div className="lg:col-span-5 space-y-3">
+              <div className="rounded-md border border-border bg-surface/30 overflow-hidden p-4">
+                <CategoryDonutChart
+                  categories={analytics.categories}
+                  uncategorizedSpent={analytics.uncategorized.spentAmount}
+                  totalSpent={analytics.summary.totalSpent}
+                  period={period}
+                />
+              </div>
 
               {/* Uncategorized notice if any with deep link */}
               {analytics.uncategorized.spentAmount > 0 && (
                 <Link
                   to={`/accounts?category=__uncategorized__&period=${encodeURIComponent(period)}`}
-                  className="p-3.5 rounded-2xl bg-surface border border-border/80 hover:border-accent/40 flex items-start gap-3 shadow-xs transition-all group block"
+                  className="p-3 rounded-md bg-surface-elevated border border-border hover:border-accent/40 flex items-start gap-3 transition-colors group block"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 mt-0.5">
+                  <div className="w-6 h-6 rounded-md bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0 mt-0.5">
                     <Sparkles className="w-3.5 h-3.5" />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -210,7 +199,7 @@ export const BudgetsPage: React.FC = () => {
                       <ArrowUpRight className="w-3.5 h-3.5 text-muted group-hover:text-accent transition-colors" />
                     </div>
                     <p className="text-[11px] text-muted font-mono mt-0.5">
-                      Tenés <span className="text-text font-bold">{analytics.uncategorized.spentAmount.toFixed(2)} €</span> sin categoría en este ciclo. Click para categorizar.
+                      <span className="text-text font-bold">{analytics.uncategorized.spentAmount.toFixed(2)} €</span> sin categoría asignada en este ciclo.
                     </p>
                   </div>
                 </Link>
