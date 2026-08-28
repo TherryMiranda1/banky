@@ -174,7 +174,7 @@ export const AccountDetail: React.FC = () => {
   }
 
   return (
-    <div className="space-y-5 max-w-5xl mx-auto animate-in fade-in duration-200">
+    <div className="space-y-4 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* Sticky Shrinking Header on Scroll */}
       <AccountStickyHeader
         isVisible={isStickyVisible}

@@ -57,13 +57,13 @@ export const AccountStickyHeader: React.FC<AccountStickyHeaderProps> = ({
 
   return (
     <div
-      className={`fixed top-14 lg:top-16 left-0 right-0 lg:left-64 z-20 transition-all duration-200 pointer-events-none ${
+      className={`fixed top-14 lg:top-[93px] inset-x-0 z-20 transition-all duration-200 pointer-events-none ${
         isVisible
           ? "opacity-100 translate-y-0 pointer-events-auto"
           : "opacity-0 -translate-y-2 pointer-events-none"
       }`}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex items-center justify-between gap-4 px-4 py-2 rounded-md bg-surface/95 border border-border shadow-lg backdrop-blur-md">
           <div className="flex items-center gap-2.5 min-w-0">
             {isGlobalView ? (

@@ -144,7 +144,7 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto animate-in fade-in duration-150">
+    <div className="space-y-4 max-w-7xl mx-auto animate-in fade-in duration-150">
       {/* GitHub Primer Document Balance Header */}
       <TotalBalance
         totals={totalBalance}
