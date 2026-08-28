@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <!-- Background / Glow Gradients -->
+    <linearGradient id="banky-core-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2a2e3d" />
+      <stop offset="40%" stop-color="#15171f" />
+      <stop offset="100%" stop-color="#0d0e14" />
+    </linearGradient>
+
+    <linearGradient id="banky-highlight-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.25" />
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.4" />
+    </linearGradient>
+
+    <!-- Neon Glow Filter -->
+    <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Group with glow effect -->
+  <g filter="url(#neon-glow)" stroke="#00e5a0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Top-left corner bracket -->
+    <path d="M 36 16 H 18.5 C 16.5 16 15 17.5 15 19.5 V 43" />
+    
+    <!-- Top-left diagonal arrow/slash -->
+    <path d="M 20.5 21.5 L 34.5 37" />
+
+    <!-- Center pill separator -->
+    <path d="M 16 50 H 35" stroke-width="2.2" />
+
+    <!-- Bottom-left corner bracket -->
+    <path d="M 15 57 V 80.5 C 15 82.5 16.5 84 18.5 84 H 36" />
+
+    <!-- Bottom-left diagonal arrow/slash -->
+    <path d="M 20.5 78.5 L 34.5 63" />
+
+    <!-- Right 'B' shape outline with neon rim -->
+    <path
+      fill-rule="evenodd"
+      clip-rule="evenodd"
+      d="M 40 16 H 64 C 76.5 16 85 24 85 33.5 C 85 41.5 78 48 68 49 C 79 50 85 57 85 66.5 C 85 76 76.5 84 64 84 H 40 V 16 Z
+         M 50 25 V 41.5 H 63 C 68.5 41.5 72.5 38 72.5 33.25 C 72.5 28.5 68.5 25 63 25 H 50 Z
+         M 50 58.5 V 75 H 63 C 68.5 75 72.5 71.5 72.5 66.75 C 72.5 62 68.5 58.5 63 58.5 H 50 Z"
+      fill="url(#banky-core-grad)"
+    />
+  </g>
+
+  <!-- Inner Dark Metallic Body Overlay for precise look -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Top-left corner bracket core -->
+    <path d="M 36 16 H 18.5 C 16.5 16 15 17.5 15 19.5 V 43" stroke="url(#banky-core-grad)" stroke-width="4.5" />
+    <path d="M 36 16 H 18.5 C 16.5 16 15 17.5 15 19.5 V 43" stroke="url(#banky-highlight-grad)" stroke-width="3" />
+
+    <!-- Top-left diagonal core -->
+    <path d="M 20.5 21.5 L 34.5 37" stroke="url(#banky-core-grad)" stroke-width="4.5" />
+    <path d="M 20.5 21.5 L 34.5 37" stroke="url(#banky-highlight-grad)" stroke-width="3" />
+
+    <!-- Center pill core -->
+    <path d="M 16 50 H 35" stroke="url(#banky-core-grad)" stroke-width="5" />
+    <path d="M 16 50 H 35" stroke="url(#banky-highlight-grad)" stroke-width="3.5" />
+
+    <!-- Bottom-left corner bracket core -->
+    <path d="M 15 57 V 80.5 C 15 82.5 16.5 84 18.5 84 H 36" stroke="url(#banky-core-grad)" stroke-width="4.5" />
+    <path d="M 15 57 V 80.5 C 15 82.5 16.5 84 18.5 84 H 36" stroke="url(#banky-highlight-grad)" stroke-width="3" />
+
+    <!-- Bottom-left diagonal core -->
+    <path d="M 20.5 78.5 L 34.5 63" stroke="url(#banky-core-grad)" stroke-width="4.5" />
+    <path d="M 20.5 78.5 L 34.5 63" stroke="url(#banky-highlight-grad)" stroke-width="3" />
+
+    <!-- Right 'B' inner highlights -->
+    <path
+      d="M 40 16 H 64 C 76.5 16 85 24 85 33.5 C 85 41.5 78 48 68 49 C 79 50 85 57 85 66.5 C 85 76 76.5 84 64 84 H 40 V 16 Z"
+      fill="url(#banky-highlight-grad)"
+      opacity="0.4"
+    />
+  </g>
+</svg>

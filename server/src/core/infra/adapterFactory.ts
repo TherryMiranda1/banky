@@ -9,9 +9,7 @@ export function getBankingAdapter(): IBankingAdapter {
   const env = getRuntimeEnv();
   const isMock =
     (env as any).MOCK_BANKING === "true" ||
-    process.env.MOCK_BANKING === "true" ||
-    !env.PRIVATE_KEY_PEM ||
-    env.APP_ID === "00000000-0000-0000-0000-000000000000";
+    process.env.MOCK_BANKING === "true";
 
   if (isMock) {
     if (!cachedAdapter || !(cachedAdapter instanceof MockBankingAdapter)) {
@@ -25,3 +23,4 @@ export function getBankingAdapter(): IBankingAdapter {
   }
   return cachedAdapter;
 }
+

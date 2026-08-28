@@ -13,19 +13,13 @@ export const MOCK_USER: User = {
 };
 
 export const MOCK_ASPSPS: Aspsp[] = [
+  // ES
   {
     name: "Banco Santander",
     country: "ES",
     logo: "https://cdn.enablebanking.com/logos/santander_es.png",
     bic: "BSCHESMMXXX",
     psuTypes: ["personal", "business"]
-  },
-  {
-    name: "Revolut",
-    country: "ES",
-    logo: "https://cdn.enablebanking.com/logos/revolut.png",
-    bic: "REVUES21XXX",
-    psuTypes: ["personal"]
   },
   {
     name: "BBVA",
@@ -40,8 +34,97 @@ export const MOCK_ASPSPS: Aspsp[] = [
     logo: "https://cdn.enablebanking.com/logos/caixabank_es.png",
     bic: "CAIXESBBXXX",
     psuTypes: ["personal"]
+  },
+  {
+    name: "Revolut",
+    country: "ES",
+    logo: "https://cdn.enablebanking.com/logos/revolut.png",
+    bic: "REVUES21XXX",
+    psuTypes: ["personal"]
+  },
+  {
+    name: "Banco Sabadell",
+    country: "ES",
+    logo: "https://cdn.enablebanking.com/logos/sabadell_es.png",
+    bic: "BSABESBBXXX",
+    psuTypes: ["personal", "business"]
+  },
+  {
+    name: "ING Direct",
+    country: "ES",
+    logo: "https://cdn.enablebanking.com/logos/ing_es.png",
+    bic: "INGDESMMXXX",
+    psuTypes: ["personal"]
+  },
+  {
+    name: "Bankinter",
+    country: "ES",
+    logo: "https://cdn.enablebanking.com/logos/bankinter_es.png",
+    bic: "BKBKESMMXXX",
+    psuTypes: ["personal", "business"]
+  },
+  // GB
+  {
+    name: "Barclays",
+    country: "GB",
+    logo: "https://cdn.enablebanking.com/logos/barclays_uk.png",
+    bic: "BUKBDD22XXX",
+    psuTypes: ["personal", "business"]
+  },
+  {
+    name: "HSBC UK",
+    country: "GB",
+    logo: "https://cdn.enablebanking.com/logos/hsbc_uk.png",
+    bic: "HBUKGB41XXX",
+    psuTypes: ["personal", "business"]
+  },
+  {
+    name: "Revolut UK",
+    country: "GB",
+    logo: "https://cdn.enablebanking.com/logos/revolut.png",
+    bic: "REVUGB21XXX",
+    psuTypes: ["personal"]
+  },
+  // FR
+  {
+    name: "BNP Paribas",
+    country: "FR",
+    logo: "https://cdn.enablebanking.com/logos/bnp_paribas_fr.png",
+    bic: "BNPAFR21XXX",
+    psuTypes: ["personal", "business"]
+  },
+  {
+    name: "Société Générale",
+    country: "FR",
+    logo: "https://cdn.enablebanking.com/logos/societe_generale_fr.png",
+    bic: "SOGEFR21XXX",
+    psuTypes: ["personal"]
+  },
+  // DE
+  {
+    name: "Deutsche Bank",
+    country: "DE",
+    logo: "https://cdn.enablebanking.com/logos/deutsche_bank_de.png",
+    bic: "DEUTDEDDXXX",
+    psuTypes: ["personal", "business"]
+  },
+  {
+    name: "N26",
+    country: "DE",
+    logo: "https://cdn.enablebanking.com/logos/n26_de.png",
+    bic: "NTSBDEB1XXX",
+    psuTypes: ["personal"]
+  },
+  // IT
+  {
+    name: "Intesa Sanpaolo",
+    country: "IT",
+    logo: "https://cdn.enablebanking.com/logos/intesa_sanpaolo_it.png",
+    bic: "BCITITMMXXX",
+    psuTypes: ["personal", "business"]
   }
 ];
+
 
 export const MOCK_CATEGORIES: CategoryItem[] = [
   {

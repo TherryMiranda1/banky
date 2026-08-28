@@ -16,6 +16,7 @@ interface AuthContextType {
   isDemoMode: boolean;
   login: (email: string, password: string) => Promise<void>;
   loginDemo: () => Promise<void>;
+  toggleMockMode: (active: boolean) => void;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateCutoffDay: (cutoffDay: number) => Promise<void>;
@@ -102,6 +103,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const toggleMockMode = (active: boolean): void => {
+    setMockModeActive(active);
+    setIsDemoMode(active);
+    if (active) {
+      if (!token || token === MOCK_TOKEN) {
+        setStoredToken(MOCK_TOKEN);
+        setToken(MOCK_TOKEN);
+        const demoUser = mockStorage.getUser();
+        setUser({
+          ...demoUser,
+          cutoffDay: demoUser.cutoffDay ?? 1
+        });
+      }
+    } else {
+      if (token === MOCK_TOKEN) {
+        logout();
+        return;
+      }
+    }
+    window.location.reload();
+  };
+
   const register = async (name: string, email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
@@ -131,7 +154,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ...demoUser,
       cutoffDay: demoUser.cutoffDay ?? 1
     });
-    // Trigger global refresh
     window.location.reload();
   };
 
@@ -145,6 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isDemoMode,
         login,
         loginDemo,
+        toggleMockMode,
         register,
         logout,
         updateCutoffDay,
@@ -163,4 +186,5 @@ export function useAuth(): AuthContextType {
   }
   return context;
 }
+
 

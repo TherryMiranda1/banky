@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, Wallet, PlusCircle, ShieldCheck, Tags, PieChart, Sparkles, RotateCcw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { BankyLogo } from "./BankyLogo";
 import { BottomNav } from "./BottomNav";
 import { CutoffSettingsModal } from "./CutoffSettingsModal";
 import { UserMenuPopover } from "./UserMenuPopover";
@@ -12,7 +13,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { user, isDemoMode, resetDemoData } = useAuth();
+  const { user, isDemoMode, toggleMockMode, resetDemoData } = useAuth();
   const [isCutoffModalOpen, setIsCutoffModalOpen] = useState<boolean>(false);
 
   const navItems = [
@@ -29,11 +30,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <aside className="hidden lg:flex w-64 border-r border-border bg-surface flex-col shrink-0">
         <div className="p-6 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src="/B-logo.jpg"
-              alt="Banky"
-              className="w-8 h-8 rounded-lg object-cover border border-border/80 shadow-sm"
-            />
+            <div className="w-8 h-8 rounded-lg bg-surface border border-border/80 flex items-center justify-center shadow-sm p-1">
+              <BankyLogo size={24} />
+            </div>
             <div>
               <h1 className="font-bold text-base tracking-tight text-text">Banky</h1>
               <p className="text-xs text-muted font-mono">Open Banking AISP</p>
@@ -89,18 +88,16 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex items-center gap-3">
             {/* Mobile / Tablet Logo (<1024px) */}
             <Link to="/" className="flex items-center gap-2.5 lg:hidden">
-              <img
-                src="/B-logo.jpg"
-                alt="Banky"
-                className="w-7 h-7 rounded-lg object-cover border border-border/80 shadow-sm"
-              />
+              <div className="w-7 h-7 rounded-lg bg-surface border border-border/80 flex items-center justify-center shadow-sm p-1">
+                <BankyLogo size={20} />
+              </div>
               <span className="font-bold text-base tracking-tight text-text">Banky</span>
             </Link>
 
             {isDemoMode && (
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
-                <span className="font-semibold hidden xs:inline">Modo Demo</span>
+                <span className="font-semibold hidden xs:inline">Modo Mock</span>
                 <button
                   type="button"
                   onClick={resetDemoData}
@@ -110,9 +107,18 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <RotateCcw className="w-3 h-3" />
                   <span className="hidden sm:inline">Restablecer</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => toggleMockMode(false)}
+                  title="Desactivar modo mock y volver a datos reales"
+                  className="text-[11px] text-amber-400/80 hover:text-amber-200 hover:underline cursor-pointer border-l border-amber-500/30 pl-2 ml-1"
+                >
+                  Desactivar
+                </button>
               </div>
             )}
           </div>
+
 
           <div className="flex items-center gap-3">
             {user && (

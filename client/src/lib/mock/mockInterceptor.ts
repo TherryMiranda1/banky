@@ -50,11 +50,15 @@ export async function handleMockRequest<T>(
     } as T;
   }
   if (path === "/aspsps") {
-    return { aspsps: mockStorage.getAspsps() } as T;
+    const country = searchParams.get("country") || "ES";
+    return { aspsps: mockStorage.getAspsps(country) } as T;
   }
+
   if (path === "/auth/start") {
-    return { url: "/?connected=true" } as T;
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return { url: `${origin}/?connected=true` } as T;
   }
+
   if (path === "/auth/callback") {
     return { success: true, connectionId: "mock-conn-1", accountsCount: 2 } as T;
   }

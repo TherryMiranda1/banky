@@ -20,7 +20,7 @@ interface UserMenuPopoverProps {
 }
 
 export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffModal }) => {
-  const { user, logout, isDemoMode, resetDemoData } = useAuth();
+  const { user, logout, isDemoMode, toggleMockMode, resetDemoData } = useAuth();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -89,6 +89,32 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
             </div>
           </div>
 
+          {/* Mock Mode Global Toggle Switch */}
+          <div className="p-2.5 rounded-xl bg-bg/80 border border-border/80 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Sparkles className={`w-4 h-4 shrink-0 ${isDemoMode ? "text-amber-400" : "text-muted"}`} />
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-text truncate">Modo Mock</p>
+                <p className="text-[10px] text-muted font-mono truncate">Datos simulados en toda la app</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isDemoMode}
+              onClick={() => toggleMockMode(!isDemoMode)}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isDemoMode ? "bg-amber-400" : "bg-border hover:bg-border/80"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-surface shadow ring-0 transition duration-200 ease-in-out ${
+                  isDemoMode ? "translate-x-4 bg-bg" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Quick Actions List */}
           <div className="space-y-1">
             <button
@@ -140,6 +166,7 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
               </button>
             )}
           </div>
+
 
           {/* AISP Security Badge */}
           <div className="p-2.5 rounded-xl bg-surface border border-border/60 flex items-center justify-between text-[11px]">

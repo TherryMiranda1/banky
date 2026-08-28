@@ -7,6 +7,7 @@ import {
   Balance,
   Transaction
 } from "../../ports/IBankingAdapter.js";
+import { getRuntimeEnv } from "../../../env.js";
 
 export class MockBankingAdapter implements IBankingAdapter {
   private aspsps: AspspItem[] = [
@@ -39,12 +40,14 @@ export class MockBankingAdapter implements IBankingAdapter {
 
   async startAuth(aspsp: AspspInput): Promise<{ url: string; authorizationId: string }> {
     const authId = `mock-auth-${Date.now()}`;
-    const redirectUrl = `http://localhost:5173/auth/callback?code=mock-code-123&state=${encodeURIComponent(aspsp.state || "")}`;
+    const frontendUrl = getRuntimeEnv().FRONTEND_URL || "http://localhost:5173";
+    const redirectUrl = `${frontendUrl}/auth/callback?code=mock-code-123&state=${encodeURIComponent(aspsp.state || "")}`;
     return {
       url: redirectUrl,
       authorizationId: authId
     };
   }
+
 
   async completeAuth(_code: string): Promise<SessionData> {
     const validUntil = new Date();

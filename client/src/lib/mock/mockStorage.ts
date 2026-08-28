@@ -88,9 +88,11 @@ class MockStorageManager {
   }
 
   // ASPSPs
-  public getAspsps(): Aspsp[] {
-    return this.state.aspsps;
+  public getAspsps(country?: string): Aspsp[] {
+    if (!country) return this.state.aspsps;
+    return this.state.aspsps.filter((a) => a.country.toUpperCase() === country.toUpperCase());
   }
+
 
   // Accounts
   public getAccounts(): Account[] {
