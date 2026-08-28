@@ -7,3 +7,4 @@
 dist/
 node_modules/
 wrangler.toml
+!wrangler.toml.example

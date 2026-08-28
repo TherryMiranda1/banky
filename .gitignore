@@ -22,7 +22,12 @@ dist/
 # Cloudflare & Deployment
 .wrangler/
 **/.wrangler/
+wrangler.toml
+**/wrangler.toml
+!wrangler.toml.example
+!**/wrangler.toml.example
 .deploy.md
+
 
 # Internal & Planning docs
 internal_docs/
