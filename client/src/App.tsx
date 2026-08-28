@@ -9,6 +9,8 @@ import { AuthCallbackPage } from "@/pages/AuthCallbackPage";
 import { Dashboard } from "@/pages/Dashboard";
 import { Connect } from "@/pages/Connect";
 import { AccountDetail } from "@/pages/AccountDetail";
+import { CategoriesPage } from "@/pages/CategoriesPage";
+import { BudgetsPage } from "@/pages/BudgetsPage";
 import { CheckCircle2, X } from "lucide-react";
 
 const AppContent: React.FC = () => {
@@ -68,8 +70,10 @@ const AppContent: React.FC = () => {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/accounts" element={<Dashboard />} />
+                <Route path="/accounts" element={<AccountDetail />} />
                 <Route path="/accounts/:id" element={<AccountDetail />} />
+                <Route path="/budgets" element={<BudgetsPage />} />
+                <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/connect" element={<Connect />} />
                 <Route path="*" element={<Dashboard />} />
               </Routes>

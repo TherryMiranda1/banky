@@ -1,21 +1,16 @@
 name = "banky-server"
 main = "src/worker.ts"
-account_id = "776875c30cee74cf1c0e896c7a72150e"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
-routes = [
-  { pattern = "api.banky.therry.dev", custom_domain = true }
-]
-
 [vars]
-APP_ID = "64676e34-5d08-4729-ac0f-7b63896762fb"
-ENABLE_BANKING_REDIRECT_URL = "https://banky.therry.dev/auth/callback"
-FRONTEND_URL = "https://banky.therry.dev"
+APP_ID = "YOUR_ENABLE_BANKING_APP_ID"
+ENABLE_BANKING_REDIRECT_URL = "http://localhost:5173/auth/callback"
+FRONTEND_URL = "http://localhost:5173"
 ENABLE_BANKING_BASE_URL = "https://api.enablebanking.com"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "banky-db"
-database_id = "786e564e-f05f-4af4-a9ce-e7ab3767658b"
+database_id = "YOUR_D1_DATABASE_ID"

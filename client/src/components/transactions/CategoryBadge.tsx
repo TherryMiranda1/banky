@@ -2,6 +2,8 @@ import React from "react";
 
 interface CategoryBadgeProps {
   category: string | null;
+  color?: string | null;
+  className?: string;
 }
 
 function getCategoryStyle(category: string | null): { bg: string; text: string; border: string } {
@@ -23,7 +25,7 @@ function getCategoryStyle(category: string | null): { bg: string; text: string; 
     };
   }
 
-  if (normalized.includes("groceries") || normalized.includes("supermarket")) {
+  if (normalized.includes("groceries") || normalized.includes("supermarket") || normalized.includes("alimentaci")) {
     return {
       bg: "bg-emerald-500/10",
       text: "text-emerald-400",
@@ -39,7 +41,7 @@ function getCategoryStyle(category: string | null): { bg: string; text: string; 
     };
   }
 
-  if (normalized.includes("entertainment") || normalized.includes("subscription")) {
+  if (normalized.includes("entertainment") || normalized.includes("subscription") || normalized.includes("ocio")) {
     return {
       bg: "bg-purple-500/10",
       text: "text-purple-400",
@@ -55,7 +57,7 @@ function getCategoryStyle(category: string | null): { bg: string; text: string; 
     };
   }
 
-  if (normalized.includes("utilities") || normalized.includes("bill") || normalized.includes("electricity")) {
+  if (normalized.includes("utilities") || normalized.includes("bill") || normalized.includes("servicio") || normalized.includes("vivienda")) {
     return {
       bg: "bg-cyan-500/10",
       text: "text-cyan-400",
@@ -63,7 +65,7 @@ function getCategoryStyle(category: string | null): { bg: string; text: string; 
     };
   }
 
-  if (normalized.includes("transfer")) {
+  if (normalized.includes("transfer") || normalized.includes("traspaso")) {
     return {
       bg: "bg-sky-500/10",
       text: "text-sky-400",
@@ -87,15 +89,36 @@ function getCategoryStyle(category: string | null): { bg: string; text: string; 
   };
 }
 
-export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category }) => {
+export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, color, className = "" }) => {
   if (!category) return null;
+
+  if (color) {
+    const isHex = color.startsWith("#");
+    const bgStyle = isHex ? `${color}20` : undefined;
+    const borderStyle = isHex ? `${color}40` : undefined;
+
+    return (
+      <span
+        style={{
+          color,
+          backgroundColor: bgStyle,
+          borderColor: borderStyle
+        }}
+        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${className}`}
+      >
+        {category}
+      </span>
+    );
+  }
+
   const style = getCategoryStyle(category);
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${style.bg} ${style.text} ${style.border}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${style.bg} ${style.text} ${style.border} ${className}`}
     >
       {category}
     </span>
   );
 };
+

@@ -4,6 +4,7 @@ export interface OAuthStateData {
   aspspName: string;
   aspspCountry: string;
   userId: string;
+  logoUrl?: string;
   createdAt: number;
 }
 

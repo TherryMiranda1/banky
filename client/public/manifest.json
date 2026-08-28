@@ -1,16 +1,22 @@
 {
   "name": "Banky",
   "short_name": "Banky",
-  "description": "Personal Banking Dashboard via Open Banking",
+  "description": "Personal Multi-Bank Dashboard via Open Banking",
+  "id": "banky-app",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0a0a0f",
   "theme_color": "#0a0a0f",
+  "categories": ["finance", "productivity"],
   "icons": [
     {
-      "src": "/Banky.jpg",
+      "src": "/B-logo.jpg",
       "sizes": "192x192 512x512",
-      "type": "image/jpeg"
+      "type": "image/jpeg",
+      "purpose": "any maskable"
     }
   ]
 }
+

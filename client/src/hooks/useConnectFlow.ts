@@ -48,7 +48,7 @@ export function useConnectFlow(): UseConnectFlowResult {
     setError(null);
     setConnectingBank(aspsp.name);
     try {
-      const { url } = await startAuth(aspsp.name, aspsp.country);
+      const { url } = await startAuth(aspsp.name, aspsp.country, aspsp.logo);
       if (url) {
         window.location.href = url;
       } else {

@@ -1,5 +1,5 @@
 import React from "react";
-import { RefreshCw, Clock, ArrowUpRight, TrendingUp } from "lucide-react";
+import { RefreshCw, Clock, Plus, DollarSign, ArrowUpRight, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface TotalBalanceProps {
@@ -7,6 +7,8 @@ interface TotalBalanceProps {
   lastSyncedAt: string | null;
   isSyncing: boolean;
   onSync: () => void;
+  onOpenCashModal?: () => void;
+  isInitializingCash?: boolean;
 }
 
 function formatCurrencySymbol(currency: string): string {
@@ -39,8 +41,8 @@ function formatRelativeTime(dateStr: string | null): string {
     const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffSec < 60) return "Just now";
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)} min ago`;
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} hours ago`;
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   } catch {
     return dateStr;
@@ -51,7 +53,9 @@ export const TotalBalance: React.FC<TotalBalanceProps> = ({
   totals,
   lastSyncedAt,
   isSyncing,
-  onSync
+  onSync,
+  onOpenCashModal,
+  isInitializingCash = false
 }) => {
   const currencies = Object.keys(totals);
   const primaryCurrency = currencies.includes("EUR")
@@ -61,82 +65,117 @@ export const TotalBalance: React.FC<TotalBalanceProps> = ({
   const otherCurrencies = currencies.filter((c) => c !== primaryCurrency);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-surface border border-border/90 p-5 sm:p-8 shadow-2xl">
-      <div className="absolute -right-24 -top-24 w-80 h-80 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -left-20 -bottom-20 w-60 h-60 bg-accent/[0.03] rounded-full blur-2xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-3xl bg-surface border border-border/80 p-6 sm:p-8 shadow-xl">
+      {/* Subtle background ambient glows */}
+      <div className="absolute top-0 right-1/4 w-72 h-72 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-60 h-60 bg-blue-500/[0.03] rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border/50 pb-4">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
-            <span className="text-xs font-mono font-semibold uppercase tracking-widest text-muted">
-              Aggregate Net Balance
-            </span>
+      <div className="relative z-10 flex flex-col items-center text-center space-y-6">
+        {/* Top bar: Status & Live indicator */}
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-bg/80 border border-border/60 text-[11px] font-mono text-muted">
+            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <span>Total Balance</span>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-1.5 text-xs text-muted font-mono">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Synced {formatRelativeTime(lastSyncedAt)}</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={onSync}
-              disabled={isSyncing}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-border/60 hover:bg-border text-xs font-mono text-text transition-colors disabled:opacity-50 cursor-pointer"
-              title="Trigger account synchronization"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-accent ${isSyncing ? "animate-spin" : ""}`} />
-              <span>{isSyncing ? "Syncing..." : "Sync"}</span>
-            </button>
+          <div className="flex items-center gap-1.5 text-xs text-muted font-mono bg-bg/60 px-2.5 py-1 rounded-full border border-border/40">
+            <Clock className="w-3 h-3 text-muted/80" />
+            <span>{formatRelativeTime(lastSyncedAt)}</span>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="min-w-0">
-            <p className="text-xs text-muted font-mono mb-1">Total Liquid Assets</p>
-            <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
-              <span className="text-2xl sm:text-3xl md:text-4xl font-mono text-muted font-light">
-                {formatCurrencySymbol(primaryCurrency)}
-              </span>
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold font-mono tracking-tight whitespace-nowrap bg-gradient-to-r from-accent via-emerald-200 to-white bg-clip-text text-transparent drop-shadow-sm">
-                {formatAmount(primaryAmount)}
-              </h1>
-              <span className="text-xs sm:text-sm font-mono text-muted font-medium ml-1">
-                {primaryCurrency}
-              </span>
-            </div>
+        {/* Primary Hero Balance */}
+        <div className="space-y-2 py-2">
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-2xl sm:text-3xl font-mono text-muted font-light">
+              {formatCurrencySymbol(primaryCurrency)}
+            </span>
+            <span className="text-4xl sm:text-6xl font-bold font-mono tracking-tight text-text">
+              {formatAmount(primaryAmount)}
+            </span>
+            <span className="text-xs sm:text-sm font-mono text-muted font-medium ml-1">
+              {primaryCurrency}
+            </span>
           </div>
 
+          {/* Secondary Currencies (Pills) */}
           {otherCurrencies.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:border-l md:border-border/60 md:pl-6">
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
               {otherCurrencies.map((curr) => (
                 <div
                   key={curr}
-                  className="px-3.5 py-2 rounded-xl bg-bg/70 border border-border/80 flex items-center gap-2.5 shadow-inner"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bg/80 border border-border text-xs font-mono text-text"
                 >
-                  <TrendingUp className="w-4 h-4 text-accent/80 shrink-0" />
-                  <div>
-                    <p className="text-[10px] uppercase font-mono text-muted">{curr} Balance</p>
-                    <p className="text-base sm:text-lg font-bold font-mono text-text whitespace-nowrap">
-                      {formatCurrencySymbol(curr)}
-                      {formatAmount(totals[curr] || "0.00")}
-                    </p>
-                  </div>
+                  <TrendingUp className="w-3 h-3 text-accent" />
+                  <span className="text-muted">{curr}:</span>
+                  <span className="font-semibold">
+                    {formatCurrencySymbol(curr)}
+                    {formatAmount(totals[curr] || "0.00")}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-muted pt-3 border-t border-border/30">
-          <span className="font-mono text-[11px] sm:text-xs">Real-time SQLite read cache (zero external latency)</span>
+        {/* Revolut-style Quick Action Buttons */}
+        <div className="flex items-center justify-center gap-3 sm:gap-6 pt-2 pb-1 flex-wrap">
+          {/* Connect / Add Bank */}
           <Link
             to="/connect"
-            className="inline-flex items-center gap-1 text-accent font-mono hover:underline hover:text-accent/90 transition-colors shrink-0"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
           >
-            Connect another bank <ArrowUpRight className="w-3 h-3" />
+            <div className="w-12 h-12 rounded-full bg-accent/15 border border-accent/30 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-bg transition-all duration-200 shadow-sm group-hover:scale-105">
+              <Plus className="w-5 h-5" />
+            </div>
+            <span className="text-[11px] font-medium text-text group-hover:text-accent transition-colors">
+              Conectar
+            </span>
+          </Link>
+
+          {/* Cash Transaction */}
+          {onOpenCashModal && (
+            <button
+              type="button"
+              onClick={onOpenCashModal}
+              disabled={isInitializingCash}
+              className="flex flex-col items-center gap-1.5 group cursor-pointer disabled:opacity-50"
+            >
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-bg transition-all duration-200 shadow-sm group-hover:scale-105">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <span className="text-[11px] font-medium text-text group-hover:text-emerald-400 transition-colors">
+                Efectivo
+              </span>
+            </button>
+          )}
+
+          {/* Sync Accounts */}
+          <button
+            type="button"
+            onClick={onSync}
+            disabled={isSyncing}
+            className="flex flex-col items-center gap-1.5 group cursor-pointer disabled:opacity-50"
+          >
+            <div className="w-12 h-12 rounded-full bg-surface border border-border text-muted flex items-center justify-center group-hover:border-accent/40 group-hover:text-accent transition-all duration-200 shadow-sm group-hover:scale-105">
+              <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin text-accent" : ""}`} />
+            </div>
+            <span className="text-[11px] font-medium text-muted group-hover:text-text transition-colors">
+              {isSyncing ? "Sincronizando" : "Sincronizar"}
+            </span>
+          </button>
+
+          {/* View Details / All Transactions */}
+          <Link
+            to="/accounts"
+            className="flex flex-col items-center gap-1.5 group cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-full bg-surface border border-border text-muted flex items-center justify-center group-hover:border-border/80 group-hover:text-text transition-all duration-200 shadow-sm group-hover:scale-105">
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+            <span className="text-[11px] font-medium text-muted group-hover:text-text transition-colors">
+              Movimientos
+            </span>
           </Link>
         </div>
       </div>

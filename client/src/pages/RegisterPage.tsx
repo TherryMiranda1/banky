@@ -54,7 +54,7 @@ export const RegisterPage: React.FC = () => {
         <div className="text-center mb-6">
           <div className="inline-flex justify-center items-center gap-3 mb-4">
             <img
-              src="/Banky.jpg"
+              src="/B-logo.jpg"
               alt="Banky"
               className="w-12 h-12 rounded-xl object-cover border border-border shadow-lg shadow-accent/10"
             />

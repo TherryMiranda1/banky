@@ -1,4 +1,8 @@
-# Frontend Rules — Spaces
+---
+trigger: always_on
+---
+
+# Frontend Rules
 
 Principios inamovibles para el cliente (React 19 + Vite + Tailwind CSS v4). Todo PR debe respetarlos.
 

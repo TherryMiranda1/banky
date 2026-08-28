@@ -1,14 +1,16 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { getDatabase } from "../../db/index.js";
+import {
+  getDb,
+  accounts,
+  bankConnections,
+  eq,
+  and,
+  isNotNull
+} from "../../db/index.js";
 import { requireAuth } from "../../middleware/auth.js";
 
 export const TotalBalanceResponseSchema = z.record(z.string(), z.string());
-
-interface RawBalanceRow {
-  currency: string;
-  last_balance: string | null;
-}
 
 export const balanceRouter = new Hono();
 
@@ -16,24 +18,33 @@ balanceRouter.use("*", requireAuth);
 
 balanceRouter.get("/total", async (c) => {
   const userId = c.get("userId");
-  const db = getDatabase();
-  const rows = await db.query<RawBalanceRow>(
-    `SELECT a.currency, a.last_balance
-     FROM accounts a
-     JOIN bank_connections bc ON a.connection_id = bc.id
-     WHERE bc.status = 'active' AND bc.user_id = ? AND a.last_balance IS NOT NULL`,
-    [userId]
-  );
+  const db = getDb();
+
+  const rows = await db
+    .select({
+      currency: accounts.currency,
+      lastBalance: accounts.lastBalance
+    })
+    .from(accounts)
+    .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+    .where(
+      and(
+        eq(bankConnections.status, "active"),
+        eq(bankConnections.userId, userId),
+        eq(accounts.isActive, true),
+        isNotNull(accounts.lastBalance)
+      )
+    );
 
   const totals: Record<string, number> = {};
 
   for (const row of rows) {
-    if (!row.last_balance) {
+    if (!row.lastBalance) {
       continue;
     }
 
     try {
-      const parsed: unknown = JSON.parse(row.last_balance);
+      const parsed: unknown = JSON.parse(row.lastBalance);
       let amountNum: number | null = null;
       let currency = row.currency;
 

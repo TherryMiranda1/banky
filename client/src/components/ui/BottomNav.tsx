@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle } from "lucide-react";
+import { LayoutDashboard, Wallet, PlusCircle, Tags, PieChart } from "lucide-react";
 
 export const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -20,6 +20,18 @@ export const BottomNav: React.FC = () => {
       isActive: pathname.startsWith("/accounts")
     },
     {
+      label: "Budgets",
+      href: "/budgets",
+      icon: PieChart,
+      isActive: pathname.startsWith("/budgets")
+    },
+    {
+      label: "Categories",
+      href: "/categories",
+      icon: Tags,
+      isActive: pathname.startsWith("/categories")
+    },
+    {
       label: "Connect",
       href: "/connect",
       icon: PlusCircle,
@@ -29,7 +41,7 @@ export const BottomNav: React.FC = () => {
 
   return (
     <nav aria-label="Mobile Navigation" className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-border mobile-bottom-nav shadow-[0_-4px_20px_rgba(0,0,0,0.4)]">
-      <div className="grid grid-cols-3 h-14 max-w-md mx-auto px-2">
+      <div className="grid grid-cols-5 h-14 max-w-lg mx-auto px-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.isActive;

@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import { EnableBankingAdapter } from "../../core/infra/enable-banking/EnableBankingAdapter.js";
 import { stateStore } from "../../services/state-store.js";
 import { encrypt } from "../../services/crypto.js";
-import { getDatabase } from "../../db/index.js";
+import { getDb, bankConnections, accounts } from "../../db/index.js";
 import { BadRequestError } from "../../errors/AppError.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { getRuntimeEnv } from "../../env.js";
@@ -13,7 +13,8 @@ import { SyncService } from "../../services/sync.js";
 
 const startAuthSchema = z.object({
   aspspName: z.string().min(1, "aspspName is required"),
-  aspspCountry: z.string().length(2, "aspspCountry must be a 2-letter ISO code")
+  aspspCountry: z.string().length(2, "aspspCountry must be a 2-letter ISO code"),
+  logoUrl: z.string().optional()
 });
 
 const callbackQuerySchema = z.object({
@@ -58,46 +59,47 @@ async function handleCallbackCore(
   const connectionId = crypto.randomUUID();
   const userId = stateData.userId || "default-user";
   const now = new Date().toISOString();
+  const logoUrl =
+    stateData.logoUrl ||
+    `https://enablebanking.com/brands/${stateData.aspspCountry}/${encodeURIComponent(stateData.aspspName)}/`;
 
-  const db = getDatabase();
+  const db = getDb();
 
-  const batchStatements = [
-    {
-      sql: `INSERT INTO bank_connections (id, user_id, bank_name, aspsp_name, aspsp_country, session_id_enc, valid_until, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      params: [
+  await db.insert(bankConnections).values({
+    id: connectionId,
+    userId,
+    bankName: stateData.aspspName,
+    aspspName: stateData.aspspName,
+    aspspCountry: stateData.aspspCountry,
+    logoUrl,
+    sessionIdEnc,
+    validUntil: sessionData.validUntil,
+    status: "active",
+    createdAt: now
+  });
+
+  for (const account of sessionData.accounts) {
+    await db
+      .insert(accounts)
+      .values({
+        id: account.uid,
         connectionId,
-        userId,
-        stateData.aspspName,
-        stateData.aspspName,
-        stateData.aspspCountry,
-        sessionIdEnc,
-        sessionData.validUntil,
-        now
-      ]
-    },
-    ...sessionData.accounts.map((account) => ({
-      sql: `INSERT INTO accounts (id, connection_id, iban, alias, currency, last_balance, synced_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              connection_id = excluded.connection_id,
-              iban = excluded.iban,
-              alias = excluded.alias,
-              currency = excluded.currency,
-              synced_at = excluded.synced_at`,
-      params: [
-        account.uid,
-        connectionId,
-        account.iban,
-        account.name,
-        account.currency,
-        null,
-        null
-      ]
-    }))
-  ];
-
-  await db.batch(batchStatements);
+        iban: account.iban || null,
+        alias: account.name || null,
+        currency: account.currency,
+        lastBalance: null,
+        syncedAt: null
+      })
+      .onConflictDoUpdate({
+        target: accounts.id,
+        set: {
+          connectionId,
+          iban: account.iban || null,
+          alias: account.name || null,
+          currency: account.currency
+        }
+      });
+  }
 
   try {
     await syncService.syncAll(userId);
@@ -113,13 +115,14 @@ async function handleCallbackCore(
 }
 
 authFlowRouter.post("/start", requireAuth, zValidator("json", startAuthSchema), async (c) => {
-  const { aspspName, aspspCountry } = c.req.valid("json");
+  const { aspspName, aspspCountry, logoUrl } = c.req.valid("json");
   const userId = c.get("userId");
 
   const state = await stateStore.createState({
     aspspName,
     aspspCountry: aspspCountry.toUpperCase(),
-    userId
+    userId,
+    logoUrl
   });
 
   const result = await adapter.startAuth({

@@ -37,6 +37,7 @@ export interface Transaction {
   currency: string;
   description: string | null;
   bookedAt: string;
+  raw?: unknown;
 }
 
 export interface IBankingAdapter {

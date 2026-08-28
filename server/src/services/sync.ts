@@ -1,8 +1,24 @@
 import { IBankingAdapter } from "../core/ports/IBankingAdapter.js";
 import { EnableBankingAdapter } from "../core/infra/enable-banking/EnableBankingAdapter.js";
-import { IDatabase, getDatabase } from "../db/index.js";
+import {
+  AppDatabase,
+  getDb,
+  bankConnections,
+  accounts,
+  transactions,
+  categories,
+  categorizationRules,
+  eq,
+  and,
+  ne,
+  lte,
+  gt,
+  sql
+} from "../db/index.js";
 import { decrypt } from "./crypto.js";
 import { AppError } from "../errors/AppError.js";
+import { CategorizationEngine } from "../core/domain/categorization-engine.js";
+import { TransferDetectionService } from "./transfer-detection.js";
 
 export interface SyncErrorItem {
   connectionId: string;
@@ -16,45 +32,61 @@ export interface SyncResult {
   errors: SyncErrorItem[];
 }
 
-interface ConnectionRow {
-  id: string;
-  session_id_enc: string;
-  valid_until: string;
-  status: string;
-}
-
-interface AccountRow {
-  synced_at: string | null;
-}
-
 export class SyncService {
   constructor(
     private readonly adapter: IBankingAdapter = new EnableBankingAdapter(),
-    private readonly dbInstance?: IDatabase
+    private readonly dbInstance?: AppDatabase
   ) {}
 
-  private get db(): IDatabase {
-    return this.dbInstance || getDatabase();
+  private get db(): AppDatabase {
+    return this.dbInstance || getDb();
   }
 
   async syncAll(userId?: string): Promise<SyncResult> {
+    const nowIso = new Date().toISOString();
+
     if (userId) {
-      await this.db.execute(
-        "UPDATE bank_connections SET status = 'expired' WHERE user_id = ? AND datetime(valid_until) <= datetime('now') AND status != 'expired'",
-        [userId]
-      );
+      await this.db
+        .update(bankConnections)
+        .set({ status: "expired" })
+        .where(
+          and(
+            eq(bankConnections.userId, userId),
+            lte(bankConnections.validUntil, nowIso),
+            ne(bankConnections.status, "expired")
+          )
+        );
     } else {
-      await this.db.execute(
-        "UPDATE bank_connections SET status = 'expired' WHERE datetime(valid_until) <= datetime('now') AND status != 'expired'"
-      );
+      await this.db
+        .update(bankConnections)
+        .set({ status: "expired" })
+        .where(
+          and(
+            lte(bankConnections.validUntil, nowIso),
+            ne(bankConnections.status, "expired")
+          )
+        );
     }
 
-    const connections = await this.db.query<ConnectionRow>(
-      userId
-        ? "SELECT id, session_id_enc, valid_until, status FROM bank_connections WHERE status = 'active' AND user_id = ? AND datetime(valid_until) > datetime('now')"
-        : "SELECT id, session_id_enc, valid_until, status FROM bank_connections WHERE status = 'active' AND datetime(valid_until) > datetime('now')",
-      userId ? [userId] : []
-    );
+    const conditions = [
+      eq(bankConnections.status, "active"),
+      gt(bankConnections.validUntil, nowIso)
+    ];
+
+    if (userId) {
+      conditions.push(eq(bankConnections.userId, userId));
+    }
+
+    const connections = await this.db
+      .select({
+        id: bankConnections.id,
+        userId: bankConnections.userId,
+        sessionIdEnc: bankConnections.sessionIdEnc,
+        validUntil: bankConnections.validUntil,
+        status: bankConnections.status
+      })
+      .from(bankConnections)
+      .where(and(...conditions));
 
     let syncedCount = 0;
     let totalAccounts = 0;
@@ -63,60 +95,116 @@ export class SyncService {
 
     for (const conn of connections) {
       try {
-        const sessionId = decrypt(conn.session_id_enc);
-        const accounts = await this.adapter.getAccounts(sessionId);
-        totalAccounts += accounts.length;
+        const sessionId = decrypt(conn.sessionIdEnc);
+        const bankAccounts = await this.adapter.getAccounts(sessionId);
+        totalAccounts += bankAccounts.length;
 
-        for (const account of accounts) {
-          await this.db.execute(
-            `INSERT INTO accounts (id, connection_id, iban, alias, currency, last_balance, synced_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT(id) DO UPDATE SET
-               connection_id = excluded.connection_id,
-               iban = COALESCE(excluded.iban, accounts.iban),
-               alias = COALESCE(excluded.alias, accounts.alias),
-               currency = excluded.currency`,
-            [account.uid, conn.id, account.iban, account.name, account.currency, null, null]
-          );
+        // Fetch user's categorization rules for auto-categorization
+        const userRules = await this.db
+          .select({
+            id: categorizationRules.id,
+            pattern: categorizationRules.pattern,
+            priority: categorizationRules.priority,
+            accountId: categorizationRules.accountId,
+            direction: categorizationRules.direction as any,
+            categoryName: categories.name
+          })
+          .from(categorizationRules)
+          .innerJoin(categories, eq(categorizationRules.categoryId, categories.id))
+          .where(eq(categorizationRules.userId, conn.userId));
 
-          const balances = await this.adapter.getBalances(account.uid, sessionId);
-          const lastBalanceJson = JSON.stringify(balances);
+        const engine = new CategorizationEngine(userRules);
 
-          const latestTx = await this.db.queryOne<{ max_booked: string | null }>(
-            "SELECT MAX(booked_at) as max_booked FROM transactions WHERE account_id = ?",
-            [account.uid]
-          );
-          const fromDate = latestTx?.max_booked ? latestTx.max_booked.split("T")[0] : undefined;
-
-          const transactions = await this.adapter.getTransactions(account.uid, sessionId, fromDate);
-
-          let insertedCount = 0;
-          for (const tx of transactions) {
-            const result = await this.db.execute(
-              `INSERT OR IGNORE INTO transactions (id, account_id, amount, currency, description, category, booked_at, raw)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-              [
-                tx.id,
-                account.uid,
-                tx.amount,
-                tx.currency,
-                tx.description,
-                null,
-                tx.bookedAt,
-                JSON.stringify(tx)
-              ]
-            );
-            if (result.changes > 0) {
-              insertedCount++;
-            }
+        for (const account of bankAccounts) {
+          if (!account.uid || typeof account.uid !== "string" || account.uid.trim() === "") {
+            console.warn(`[SyncService] Skipping account without valid uid in connection ${conn.id}`);
+            continue;
           }
 
-          totalTransactions += insertedCount;
-          const now = new Date().toISOString();
-          await this.db.execute(
-            "UPDATE accounts SET last_balance = ?, synced_at = ? WHERE id = ?",
-            [lastBalanceJson, now, account.uid]
-          );
+          try {
+            await this.db
+              .insert(accounts)
+              .values({
+                id: account.uid,
+                connectionId: conn.id,
+                iban: account.iban || null,
+                alias: account.name || null,
+                currency: account.currency,
+                lastBalance: null,
+                syncedAt: null
+              })
+              .onConflictDoUpdate({
+                target: accounts.id,
+                set: {
+                  connectionId: conn.id,
+                  iban: sql`COALESCE(${account.iban || null}, ${accounts.iban})`,
+                  alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
+                  currency: account.currency
+                }
+              });
+
+            let lastBalanceJson: string | null = null;
+            try {
+              const balances = await this.adapter.getBalances(account.uid, sessionId);
+              lastBalanceJson = JSON.stringify(balances);
+            } catch (balErr) {
+              console.warn(`[SyncService] Failed to fetch balances for account ${account.uid}:`, balErr);
+            }
+
+            const [latestTx] = await this.db
+              .select({ maxBooked: sql<string | null>`MAX(${transactions.bookedAt})` })
+              .from(transactions)
+              .where(eq(transactions.accountId, account.uid));
+
+            const fromDate = latestTx?.maxBooked ? latestTx.maxBooked.split("T")[0] : undefined;
+            const txList = await this.adapter.getTransactions(account.uid, sessionId, fromDate);
+
+            let insertedCount = 0;
+            for (const tx of txList) {
+              const initialCategory = engine.evaluate({
+                description: tx.description || null,
+                amount: tx.amount,
+                accountId: account.uid
+              });
+              const sourceId = tx.id || null;
+              const compositeId = sourceId ? `${account.uid}::${sourceId}` : `${account.uid}::${crypto.randomUUID()}`;
+
+              const res = await this.db
+                .insert(transactions)
+                .values({
+                  id: compositeId,
+                  sourceId: sourceId,
+                  accountId: account.uid,
+                  amount: tx.amount,
+                  currency: tx.currency,
+                  description: tx.description || null,
+                  category: initialCategory,
+                  bookedAt: tx.bookedAt,
+                  raw: JSON.stringify(tx.raw || tx)
+                })
+                .onConflictDoNothing();
+
+              const changes = (res as any)?.changes ?? (res as any)?.meta?.changes ?? (res as any)?.rowsAffected ?? 0;
+              if (changes > 0) {
+                insertedCount++;
+              }
+            }
+
+            totalTransactions += insertedCount;
+            const now = new Date().toISOString();
+
+            await this.db
+              .update(accounts)
+              .set({
+                lastBalance: lastBalanceJson,
+                syncedAt: now
+              })
+              .where(eq(accounts.id, account.uid));
+          } catch (accErr: unknown) {
+            const accErrMsg = accErr instanceof Error ? accErr.message : String(accErr);
+            console.error(`[SyncService] Error syncing account ${account.uid}:`, accErrMsg);
+            errors.push({ connectionId: conn.id, error: `Account ${account.uid}: ${accErrMsg}` });
+          }
         }
 
         syncedCount++;
@@ -126,21 +214,30 @@ export class SyncService {
           (typeof err === "object" &&
             err !== null &&
             "statusCode" in err &&
-            (err.statusCode === 401 || err.statusCode === 403)) ||
+            ((err as any).statusCode === 401 || (err as any).statusCode === 403)) ||
           (typeof err === "object" &&
             err !== null &&
             "status" in err &&
-            (err.status === 401 || err.status === 403));
+            ((err as any).status === 401 || (err as any).status === 403));
 
         if (isAuthError) {
-          await this.db.execute(
-            "UPDATE bank_connections SET status = 'expired' WHERE id = ?",
-            [conn.id]
-          );
+          await this.db
+            .update(bankConnections)
+            .set({ status: "expired" })
+            .where(eq(bankConnections.id, conn.id));
         }
 
         const errorMessage = err instanceof Error ? err.message : String(err);
         errors.push({ connectionId: conn.id, error: errorMessage });
+      }
+    }
+
+    if (userId) {
+      try {
+        const transferDetector = new TransferDetectionService();
+        await transferDetector.detectAndMatchTransfers(userId);
+      } catch (tErr) {
+        console.warn("[SyncService] Transfer detection warning:", tErr);
       }
     }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { getAccounts, getTotalBalance, triggerSync, Account } from "@/lib/api/accounts";
+import { getAccounts, getTotalBalance, triggerSync, reorderAccounts, Account } from "@/lib/api/accounts";
 
 export interface DashboardDataState {
   accounts: Account[];
@@ -10,6 +10,7 @@ export interface DashboardDataState {
   lastSyncedAt: string | null;
   refreshData: () => Promise<void>;
   syncAll: () => Promise<void>;
+  handleReorderAccounts: (newAccountIds: string[]) => Promise<void>;
 }
 
 export function useDashboardData(): DashboardDataState {
@@ -70,6 +71,27 @@ export function useDashboardData(): DashboardDataState {
     }
   }, [fetchDashboardData]);
 
+  const handleReorderAccounts = useCallback(async (newAccountIds: string[]) => {
+    // Optimistic update
+    const idMap = new Map(accounts.map((a) => [a.id, a]));
+    const reordered: Account[] = [];
+    newAccountIds.forEach((id, idx) => {
+      const acc = idMap.get(id);
+      if (acc) {
+        reordered.push({ ...acc, position: idx });
+      }
+    });
+    setAccounts(reordered);
+
+    try {
+      const updated = await reorderAccounts(newAccountIds);
+      setAccounts(updated);
+    } catch (err) {
+      console.error("Error reordering accounts:", err);
+      await fetchDashboardData(false);
+    }
+  }, [accounts, fetchDashboardData]);
+
   return {
     accounts,
     totalBalance,
@@ -78,6 +100,8 @@ export function useDashboardData(): DashboardDataState {
     error,
     lastSyncedAt,
     refreshData,
-    syncAll
+    syncAll,
+    handleReorderAccounts
   };
 }
+

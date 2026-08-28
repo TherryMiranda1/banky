@@ -1,0 +1,26 @@
+name = "banky-server"
+main = "src/worker.ts"
+# Optional: account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# Optional: Custom domain route
+# routes = [
+#   { pattern = "api.yourdomain.com", custom_domain = true }
+# ]
+
+[vars]
+# Application ID from Enable Banking Control Panel (UUID)
+APP_ID = "YOUR_ENABLE_BANKING_APP_ID"
+# Callback URL on your frontend where Enable Banking redirects users after authorization
+ENABLE_BANKING_REDIRECT_URL = "http://localhost:5173/auth/callback"
+# Frontend URL for CORS configuration
+FRONTEND_URL = "http://localhost:5173"
+# Enable Banking Base API URL
+ENABLE_BANKING_BASE_URL = "https://api.enablebanking.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "banky-db"
+database_id = "YOUR_D1_DATABASE_ID"

@@ -243,7 +243,8 @@ export class EnableBankingAdapter implements IBankingAdapter {
             t.booking_date ||
             t.value_date ||
             t.transaction_date ||
-            new Date().toISOString().split("T")[0]!
+            new Date().toISOString().split("T")[0]!,
+          raw: t
         };
       });
 

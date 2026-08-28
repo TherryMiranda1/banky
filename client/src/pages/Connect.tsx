@@ -72,18 +72,18 @@ const BankCard: React.FC<BankCardProps> = ({ bank, isConnecting, onConnect }) =>
     >
       <div className="flex items-start justify-between w-full">
         <div className="flex items-center gap-3 sm:gap-3.5 min-w-0">
-          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-bg border border-border flex items-center justify-center shrink-0 group-hover:border-accent/40 transition-colors overflow-hidden">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white shadow-sm border border-border/40 p-1.5 flex items-center justify-center shrink-0 overflow-hidden">
             {bank.logo ? (
               <img
                 src={bank.logo}
                 alt={bank.name}
-                className="w-6 h-6 sm:w-7 sm:h-7 object-contain"
+                className="w-full h-full object-contain"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = "none";
                 }}
               />
             ) : (
-              <Building2 className="w-5 h-5 text-muted group-hover:text-accent transition-colors" />
+              <Building2 className="w-5 h-5 text-slate-700" />
             )}
           </div>
           <div className="min-w-0 flex-1">

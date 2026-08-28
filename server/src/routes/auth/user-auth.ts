@@ -2,12 +2,13 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import crypto from "node:crypto";
-import { getDatabase } from "../../db/index.js";
+import { getDb, users, eq } from "../../db/index.js";
 import { hashPassword, verifyPassword } from "../../services/password.js";
 import { createAuthToken } from "../../services/jwt.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { ConflictError, UnauthorizedError, NotFoundError } from "../../errors/AppError.js";
 import { env } from "../../env.js";
+import { seedDefaultCategoriesIfEmpty } from "../../services/categories-seed.js";
 
 const registerSchema = z.object({
   email: z.string().email("Valid email is required").transform((val) => val.toLowerCase().trim()),
@@ -20,21 +21,18 @@ const loginSchema = z.object({
   password: z.string().min(1, "Password is required")
 });
 
-interface UserDbRow {
-  id: string;
-  email: string;
-  password_hash: string;
-  name: string;
-  created_at: string;
-}
-
 export const userAuthRouter = new Hono();
 
 userAuthRouter.post("/register", zValidator("json", registerSchema), async (c) => {
   const { email, password, name } = c.req.valid("json");
-  const db = getDatabase();
+  const db = getDb();
 
-  const existingUser = await db.queryOne<UserDbRow>("SELECT id FROM users WHERE email = ?", [email]);
+  const [existingUser] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
+
   if (existingUser) {
     throw new ConflictError("A user with this email address already exists");
   }
@@ -43,11 +41,20 @@ userAuthRouter.post("/register", zValidator("json", registerSchema), async (c) =
   const passwordHash = await hashPassword(password);
   const now = new Date().toISOString();
 
-  await db.execute(
-    `INSERT INTO users (id, email, password_hash, name, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [userId, email, passwordHash, name, now, now]
-  );
+  await db.insert(users).values({
+    id: userId,
+    email,
+    passwordHash,
+    name,
+    createdAt: now,
+    updatedAt: now
+  });
+
+  try {
+    await seedDefaultCategoriesIfEmpty(db, userId);
+  } catch (err) {
+    console.error("Failed to seed default categories on register:", err);
+  }
 
   const secret = (c.env as any)?.JWT_SECRET || env.JWT_SECRET;
   const token = await createAuthToken({ id: userId, email, name }, secret);
@@ -59,6 +66,7 @@ userAuthRouter.post("/register", zValidator("json", registerSchema), async (c) =
         id: userId,
         email,
         name,
+        cutoffDay: 1,
         createdAt: now
       }
     },
@@ -68,14 +76,15 @@ userAuthRouter.post("/register", zValidator("json", registerSchema), async (c) =
 
 userAuthRouter.post("/login", zValidator("json", loginSchema), async (c) => {
   const { email, password } = c.req.valid("json");
-  const db = getDatabase();
+  const db = getDb();
 
-  const user = await db.queryOne<UserDbRow>(
-    "SELECT id, email, password_hash, name, created_at FROM users WHERE email = ?",
-    [email]
-  );
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, email))
+    .limit(1);
 
-  if (!user || !(await verifyPassword(password, user.password_hash))) {
+  if (!user || !(await verifyPassword(password, user.passwordHash))) {
     throw new UnauthorizedError("Invalid email or password");
   }
 
@@ -88,19 +97,21 @@ userAuthRouter.post("/login", zValidator("json", loginSchema), async (c) => {
       id: user.id,
       email: user.email,
       name: user.name,
-      createdAt: user.created_at
+      cutoffDay: user.cutoffDay ?? 1,
+      createdAt: user.createdAt
     }
   });
 });
 
 userAuthRouter.get("/me", requireAuth, async (c) => {
   const userId = c.get("userId");
-  const db = getDatabase();
+  const db = getDb();
 
-  const user = await db.queryOne<UserDbRow>(
-    "SELECT id, email, name, created_at FROM users WHERE id = ?",
-    [userId]
-  );
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
 
   if (!user) {
     throw new NotFoundError("User not found");
@@ -111,7 +122,8 @@ userAuthRouter.get("/me", requireAuth, async (c) => {
       id: user.id,
       email: user.email,
       name: user.name,
-      createdAt: user.created_at
+      cutoffDay: user.cutoffDay ?? 1,
+      createdAt: user.createdAt
     }
   });
 });

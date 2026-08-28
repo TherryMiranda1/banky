@@ -1,56 +1,44 @@
 import React from "react";
 import { Account } from "@/lib/api/accounts";
-import { Building2, CheckCircle, AlertTriangle, ArrowUpRight } from "lucide-react";
+import { AlertTriangle, Power, Settings2, ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BankLogo } from "./BankLogo";
+import { formatFirstName } from "@/lib/format-utils";
 
 interface AccountCardProps {
   account: Account;
+  onEdit?: (account: Account) => void;
+  onToggleActive?: (account: Account) => void;
+  onMove?: (direction: "prev" | "next") => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
-function getBankColorClass(bankName: string): { border: string; bg: string; text: string } {
+function getBankBadge(bankName: string): { label: string; bg: string; text: string } {
   const normalized = bankName.toLowerCase();
+  if (normalized.includes("efectivo") || normalized.includes("cash")) {
+    return { label: "Cash", bg: "bg-emerald-500/10 border-emerald-500/30", text: "text-emerald-400" };
+  }
   if (normalized.includes("santander")) {
-    return {
-      border: "border-l-[#ec0000]",
-      bg: "bg-[#ec0000]/10",
-      text: "text-[#ec0000]"
-    };
+    return { label: "Santander", bg: "bg-red-500/10 border-red-500/30", text: "text-red-400" };
   }
   if (normalized.includes("revolut")) {
-    return {
-      border: "border-l-[#1963d2]",
-      bg: "bg-[#1963d2]/10",
-      text: "text-[#1963d2]"
-    };
+    return { label: "Revolut", bg: "bg-blue-500/10 border-blue-500/30", text: "text-blue-400" };
   }
   if (normalized.includes("bbva")) {
-    return {
-      border: "border-l-[#004481]",
-      bg: "bg-[#004481]/10",
-      text: "text-[#007eae]"
-    };
+    return { label: "BBVA", bg: "bg-sky-500/10 border-sky-500/30", text: "text-sky-400" };
   }
   if (normalized.includes("caixa") || normalized.includes("imagin")) {
-    return {
-      border: "border-l-[#007eae]",
-      bg: "bg-[#007eae]/10",
-      text: "text-[#007eae]"
-    };
+    return { label: "Caixa", bg: "bg-cyan-500/10 border-cyan-500/30", text: "text-cyan-400" };
   }
-  return {
-    border: "border-l-accent",
-    bg: "bg-accent/10",
-    text: "text-accent"
-  };
+  return { label: "Bank", bg: "bg-surface border-border", text: "text-muted" };
 }
 
 function maskIban(iban: string | null): string {
-  if (!iban) return "No IBAN";
+  if (!iban) return "Efectivo";
   const clean = iban.replace(/\s+/g, "");
   if (clean.length <= 8) return clean;
-  const prefix = clean.slice(0, 4);
-  const suffix = clean.slice(-4);
-  return `${prefix} •••• ${suffix}`;
+  return `•••• ${clean.slice(-4)}`;
 }
 
 function formatCurrencySymbol(currency: string): string {
@@ -75,52 +63,128 @@ function formatBalanceAmount(amountStr: string): string {
   }).format(num);
 }
 
-export const AccountCard: React.FC<AccountCardProps> = ({ account }) => {
-  const bankTheme = getBankColorClass(account.bankName);
+export const AccountCard: React.FC<AccountCardProps> = ({
+  account,
+  onEdit,
+  onToggleActive,
+  onMove,
+  isFirst = false,
+  isLast = false
+}) => {
   const isExpired = account.status === "expired";
+  const isActive = account.isActive ?? true;
   const balanceAmountStr = account.lastBalance?.amount ?? "0.00";
   const balanceNum = parseFloat(balanceAmountStr);
   const isNegative = !isNaN(balanceNum) && balanceNum < 0;
 
+  const displayName = account.nickname || formatFirstName(account.alias) || account.bankName;
+  const bankBadge = getBankBadge(account.bankName);
+
   return (
-    <div className={`group relative rounded-xl bg-surface border border-border border-l-4 ${bankTheme.border} p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(0,229,160,0.10)] hover:border-border/80`}>
+    <div
+      className={`group relative rounded-2xl bg-surface border border-border/80 p-5 flex flex-col justify-between transition-all duration-200 hover:border-border hover:shadow-lg ${
+        !isActive ? "opacity-60 grayscale-[20%]" : ""
+      }`}
+    >
+      {/* Card Header: Bank Logo + Info + Actions */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-lg ${bankTheme.bg} flex items-center justify-center ${bankTheme.text} shrink-0`}>
-            <Building2 className="w-5 h-5" />
-          </div>
-          <div>
-            <Link
-              to={`/accounts/${encodeURIComponent(account.id)}`}
-              className="font-semibold text-sm text-text hover:text-accent transition-colors block"
-            >
-              {account.bankName}
-            </Link>
-            <p className="text-xs text-muted font-mono mt-0.5">
-              {account.alias || maskIban(account.iban)}
+        <Link
+          to={`/accounts/${encodeURIComponent(account.id)}`}
+          className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+        >
+          <BankLogo bankName={account.bankName} logoUrl={account.logoUrl} size="md" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-text group-hover:text-accent transition-colors truncate">
+                {displayName}
+              </span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full border ${bankBadge.bg} ${bankBadge.text}`}>
+                {bankBadge.label}
+              </span>
+            </div>
+            <p className="text-xs text-muted font-mono mt-0.5 truncate">
+              {maskIban(account.iban)}
             </p>
           </div>
-        </div>
+        </Link>
 
-        <div className="shrink-0">
-          {isExpired ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-negative/10 text-negative border border-negative/20">
-              <AlertTriangle className="w-3 h-3" />
-              Expired
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono bg-accent/10 text-accent border border-accent/20">
-              <CheckCircle className="w-3 h-3" />
-              Active
-            </span>
+        {/* Quick controls toolbar */}
+        <div className="flex items-center gap-1 shrink-0">
+          {onMove && (
+            <div className="flex items-center bg-bg/80 border border-border/60 rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onMove("prev");
+                }}
+                disabled={isFirst}
+                title="Mover cuenta a la izquierda"
+                className="p-1 rounded text-muted hover:text-text hover:bg-border/60 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onMove("next");
+                }}
+                disabled={isLast}
+                title="Mover cuenta a la derecha"
+                className="p-1 rounded text-muted hover:text-text hover:bg-border/60 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit(account);
+              }}
+              title="Configurar cuenta"
+              className="p-1.5 rounded-lg text-muted hover:text-text hover:bg-border/60 transition-colors cursor-pointer"
+            >
+              <Settings2 className="w-4 h-4" />
+            </button>
+          )}
+
+          {onToggleActive && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleActive(account);
+              }}
+              title={isActive ? "Desactivar cuenta" : "Activar cuenta"}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                isActive
+                  ? "text-accent/80 hover:text-accent hover:bg-accent/10"
+                  : "text-muted hover:text-text hover:bg-border/60"
+              }`}
+            >
+              <Power className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>
 
-      <div className="mt-6 pt-4 border-t border-border/40 flex items-end justify-between">
+      {/* Card Footer: Balance & Navigation link */}
+      <Link
+        to={`/accounts/${encodeURIComponent(account.id)}`}
+        className="mt-5 pt-4 border-t border-border/40 flex items-end justify-between cursor-pointer"
+      >
         <div>
-          <span className="text-[11px] text-muted font-mono uppercase tracking-wider block">
-            Available Balance
+          <span className="text-[10px] text-muted font-mono uppercase tracking-wider block">
+            Saldo Disponible
           </span>
           <div className="flex items-baseline gap-1 mt-0.5">
             <span className="text-sm font-mono text-muted">
@@ -128,25 +192,41 @@ export const AccountCard: React.FC<AccountCardProps> = ({ account }) => {
             </span>
             <span
               className={`text-2xl font-bold font-mono tracking-tight ${
-                isNegative ? "text-negative" : "text-accent"
+                isNegative ? "text-negative" : "text-text group-hover:text-accent transition-colors"
               }`}
             >
               {formatBalanceAmount(balanceAmountStr)}
             </span>
-            <span className="text-xs font-mono text-muted ml-1">
+            <span className="text-xs font-mono text-muted ml-0.5">
               {account.currency}
             </span>
           </div>
+
+          {account.lastBalance?.heldAmount && (
+            <div className="mt-1 flex items-center gap-1.5 text-[10px] font-mono text-amber-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span>Retención: {formatCurrencySymbol(account.currency)}{account.lastBalance.heldAmount}</span>
+            </div>
+          )}
         </div>
 
-        <Link
-          to={`/accounts/${encodeURIComponent(account.id)}`}
-          className="p-1.5 rounded-lg bg-bg text-muted hover:text-accent hover:bg-border/60 transition-colors"
-          title="View account transactions"
-        >
-          <ArrowUpRight className="w-4 h-4" />
-        </Link>
-      </div>
+        <div className="flex items-center gap-2">
+          {isExpired ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-negative/10 text-negative border border-negative/20">
+              <AlertTriangle className="w-3 h-3" />
+              Expirada
+            </span>
+          ) : !isActive ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-border text-muted">
+              Inactiva
+            </span>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-bg/80 border border-border/60 text-muted group-hover:text-accent group-hover:border-accent/40 flex items-center justify-center transition-colors">
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+          )}
+        </div>
+      </Link>
     </div>
   );
 };

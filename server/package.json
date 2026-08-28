@@ -12,13 +12,20 @@
     "deploy": "wrangler deploy",
     "d1:create": "wrangler d1 create banky-db",
     "d1:migrate:local": "wrangler d1 execute banky-db --local --file=src/db/schema.sql",
-    "d1:migrate:remote": "wrangler d1 execute banky-db --remote --file=src/db/schema.sql"
+    "d1:migrate:remote": "wrangler d1 execute banky-db --remote --file=src/db/schema.sql",
+    "db:generate": "drizzle-kit generate",
+    "test:auth": "tsx scripts/test-auth.ts",
+    "test:sync": "tsx scripts/test-sync.ts",
+    "test:categories": "tsx scripts/test-categories.ts",
+    "test:budgets": "tsx scripts/test-budgets-analytics.ts",
+    "test:cycle": "tsx scripts/test-billing-cycle.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.8",
     "@hono/zod-validator": "^0.4.3",
     "better-sqlite3": "^11.8.1",
     "dotenv": "^16.4.7",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.7.2",
     "zod": "^3.24.2"
   },
@@ -26,6 +33,7 @@
     "@cloudflare/workers-types": "^5.20260826.1",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.5",
+    "drizzle-kit": "^0.31.10",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "wrangler": "^4.126.0"

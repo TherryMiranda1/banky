@@ -1,60 +1,41 @@
 import path from "node:path";
 import { createRequire } from "node:module";
-import { IDatabase, RunResult, StatementItem } from "./interface.js";
-import { BetterSqlite3Adapter } from "./sqlite-adapter.js";
-import { D1Database, D1DatabaseAdapter } from "./d1-adapter.js";
+import { drizzle as drizzleD1, DrizzleD1Database } from "drizzle-orm/d1";
+import { drizzle as drizzleBetterSqlite3, BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+import * as schema from "./schema.js";
 import { runMigrations } from "./schema.js";
 
-export * from "./interface.js";
-export * from "./sqlite-adapter.js";
-export * from "./d1-adapter.js";
+export * from "./schema.js";
+export * from "drizzle-orm";
 
-let defaultDbAdapter: IDatabase | null = null;
+export interface D1Database {
+  prepare(query: string): {
+    bind(...params: unknown[]): unknown;
+    all<T = unknown>(): Promise<{ results: T[] }>;
+    run(): Promise<{ success: boolean; meta: unknown }>;
+  };
+  batch(statements: unknown[]): Promise<unknown[]>;
+  exec(query: string): Promise<unknown>;
+}
+
+export type AppDatabase = BaseSQLiteDatabase<"async" | "sync", any, typeof schema>;
+
+let defaultDb: AppDatabase | null = null;
 let sqliteInstance: unknown = null;
 
-class LazyDatabaseProxy implements IDatabase {
-  private get activeDb(): IDatabase {
-    if (!defaultDbAdapter) {
-      throw new Error("Database not initialized. In Cloudflare Workers, ensure c.env.DB is bound.");
-    }
-    return defaultDbAdapter;
-  }
-
-  async query<T = unknown>(sql: string, params: unknown[] = []): Promise<T[]> {
-    return this.activeDb.query<T>(sql, params);
-  }
-
-  async queryOne<T = unknown>(sql: string, params: unknown[] = []): Promise<T | null> {
-    return this.activeDb.queryOne<T>(sql, params);
-  }
-
-  async execute(sql: string, params: unknown[] = []): Promise<RunResult> {
-    return this.activeDb.execute(sql, params);
-  }
-
-  async batch(statements: StatementItem[]): Promise<void> {
-    return this.activeDb.batch(statements);
-  }
-
-  async rawSql(sql: string): Promise<void> {
-    return this.activeDb.rawSql(sql);
-  }
+export function setDb(database: AppDatabase): void {
+  defaultDb = database;
 }
 
-const lazyProxy = new LazyDatabaseProxy();
-
-export function setDatabase(database: IDatabase): void {
-  defaultDbAdapter = database;
-}
-
-export function getDatabase(d1OrPath?: D1Database | string): IDatabase {
+export function getDb(d1OrPath?: D1Database | string): AppDatabase {
   if (d1OrPath && typeof d1OrPath === "object" && "prepare" in d1OrPath) {
-    defaultDbAdapter = new D1DatabaseAdapter(d1OrPath as D1Database);
-    return defaultDbAdapter;
+    defaultDb = drizzleD1(d1OrPath as any, { schema }) as unknown as AppDatabase;
+    return defaultDb;
   }
 
-  if (defaultDbAdapter) {
-    return defaultDbAdapter;
+  if (defaultDb) {
+    return defaultDb;
   }
 
   try {
@@ -68,14 +49,20 @@ export function getDatabase(d1OrPath?: D1Database | string): IDatabase {
           : (process.env && process.env.DB_PATH) || path.resolve(process.cwd(), "banky.db");
       sqliteInstance = new DatabaseModule(dbPath);
       runMigrations(sqliteInstance as any);
-      defaultDbAdapter = new BetterSqlite3Adapter(sqliteInstance as any);
-      return defaultDbAdapter;
+      defaultDb = drizzleBetterSqlite3(sqliteInstance as any, { schema }) as unknown as AppDatabase;
+      return defaultDb;
     }
   } catch {
   }
 
-  return lazyProxy;
+  if (!defaultDb) {
+    throw new Error("Database not initialized. In Cloudflare Workers, ensure c.env.DB is bound.");
+  }
+
+  return defaultDb;
 }
+
+export const getDatabase = getDb;
 
 export function getNativeSqliteDb(): unknown {
   return sqliteInstance;

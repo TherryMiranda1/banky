@@ -8,6 +8,9 @@ import { syncRouter } from "./routes/sync/index.js";
 import { accountsRouter } from "./routes/accounts/index.js";
 import { balanceRouter } from "./routes/balance/index.js";
 import { transactionsRouter } from "./routes/transactions/index.js";
+import { categoriesRouter } from "./routes/categories/index.js";
+import { budgetsRouter, analyticsRouter } from "./routes/budgets/index.js";
+import { usersRouter } from "./routes/users/index.js";
 import { generateEnableBankingJwt } from "./services/jwt.js";
 
 import { setRuntimeEnv } from "./env.js";
@@ -39,7 +42,7 @@ app.use(
   "*",
   cors({
     origin: (origin) => origin || "*",
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"]
   })
 );
@@ -54,6 +57,10 @@ app.route("/sync", syncRouter);
 app.route("/accounts", accountsRouter);
 app.route("/balance", balanceRouter);
 app.route("/transactions", transactionsRouter);
+app.route("/categories", categoriesRouter);
+app.route("/budgets", budgetsRouter);
+app.route("/analytics", analyticsRouter);
+app.route("/users", usersRouter);
 
 app.onError((err, c) => {
   if (err instanceof AppError) {

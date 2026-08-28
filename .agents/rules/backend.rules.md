@@ -1,4 +1,8 @@
-# Backend Rules — Spaces
+---
+trigger: always_on
+---
+
+# Backend Rules
 
 Principios inamovibles para el servidor (Bun + Hono + Zod). Todo PR debe respetarlos.
 

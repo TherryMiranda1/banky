@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Transaction } from "@/lib/api/transactions";
 import { TransactionRow } from "./TransactionRow";
+import { TransactionDetailModal } from "./TransactionDetailModal";
 import { Loader2, Inbox } from "lucide-react";
+import { CategoryItem } from "@/lib/api/categories";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -10,6 +12,12 @@ interface TransactionListProps {
   isLoading: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => void;
+  onUpdateCategory?: (
+    transactionId: string,
+    categoryId: string | null,
+    categoryName: string | null
+  ) => void;
+  categoriesList?: CategoryItem[];
 }
 
 export const TransactionList: React.FC<TransactionListProps> = ({
@@ -18,8 +26,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   hasMore,
   isLoading,
   isLoadingMore,
-  onLoadMore
+  onLoadMore,
+  onUpdateCategory,
+  categoriesList
 }) => {
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   if (isLoading) {
     return (
       <div className="rounded-xl bg-surface border border-border overflow-hidden divide-y divide-border/40">
@@ -69,7 +80,14 @@ export const TransactionList: React.FC<TransactionListProps> = ({
 
         <div className="divide-y divide-border/20">
           {transactions.map((tx, idx) => (
-            <TransactionRow key={tx.id} transaction={tx} index={idx} />
+            <TransactionRow
+              key={tx.id}
+              transaction={tx}
+              index={idx}
+              onUpdateCategory={onUpdateCategory}
+              categoriesList={categoriesList}
+              onSelectTransaction={(selected) => setSelectedTransaction(selected)}
+            />
           ))}
         </div>
       </div>
@@ -93,6 +111,26 @@ export const TransactionList: React.FC<TransactionListProps> = ({
           </button>
         </div>
       )}
+
+      {/* Transaction Rich Detail Modal */}
+      <TransactionDetailModal
+        isOpen={Boolean(selectedTransaction)}
+        transaction={selectedTransaction}
+        onClose={() => setSelectedTransaction(null)}
+        categoriesList={categoriesList}
+        onUpdateCategory={(txId, catId, catName) => {
+          if (selectedTransaction && selectedTransaction.id === txId) {
+            setSelectedTransaction({
+              ...selectedTransaction,
+              category: catName
+            });
+          }
+          if (onUpdateCategory) {
+            onUpdateCategory(txId, catId, catName);
+          }
+        }}
+      />
     </div>
   );
 };
+

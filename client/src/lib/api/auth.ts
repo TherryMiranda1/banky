@@ -4,7 +4,18 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  cutoffDay?: number;
   createdAt: string;
+}
+
+export interface UserPreferencesResponse {
+  data: {
+    cutoffDay: number;
+  };
+}
+
+export interface UpdatePreferencesResponse {
+  data: User;
 }
 
 export interface AuthResponse {
@@ -67,12 +78,13 @@ export async function getAspsps(country = "ES"): Promise<Aspsp[]> {
   return data.aspsps;
 }
 
-export async function startAuth(aspspName: string, aspspCountry: string): Promise<StartAuthResponse> {
+export async function startAuth(aspspName: string, aspspCountry: string, logoUrl?: string): Promise<StartAuthResponse> {
   return apiFetch<StartAuthResponse>("/auth/start", {
     method: "POST",
     body: JSON.stringify({
       aspspName,
-      aspspCountry
+      aspspCountry,
+      logoUrl
     })
   });
 }
@@ -82,4 +94,19 @@ export async function completeAuthCallback(params: CompleteAuthParams): Promise<
     method: "POST",
     body: JSON.stringify(params)
   });
+}
+
+export async function getUserPreferences(): Promise<{ cutoffDay: number }> {
+  const res = await apiFetch<UserPreferencesResponse>("/users/preferences", {
+    method: "GET"
+  });
+  return res.data;
+}
+
+export async function updateUserPreferences(preferences: { cutoffDay: number }): Promise<User> {
+  const res = await apiFetch<UpdatePreferencesResponse>("/users/preferences", {
+    method: "PATCH",
+    body: JSON.stringify(preferences)
+  });
+  return res.data;
 }

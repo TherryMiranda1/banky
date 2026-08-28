@@ -1,13 +1,37 @@
+# Dependencies
+node_modules/
+
+# Environment files & Secrets
 .env
 .env.*
 !.env.example
+!.env.*.example
+*.key
+*.pem
+
+# Database & Storage
 *.db
 *.db-shm
 *.db-wal
-node_modules/
+banky-data/
+
+# Build outputs
 dist/
-*.key
 *.tsbuildinfo
-.deploy.md
-.atl/
+
+# Cloudflare & Deployment
 .wrangler/
+**/.wrangler/
+.deploy.md
+
+# Internal & Planning docs
+internal_docs/
+plans/
+.atl/
+.agents/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
