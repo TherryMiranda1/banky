@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { Transaction } from "@/lib/api/transactions";
-import { ArrowDownLeft, ArrowUpRight, TrendingUp, TrendingDown } from "lucide-react";
 
 interface PeriodSummaryStripProps {
   transactions: Transaction[];
@@ -45,64 +44,26 @@ export const PeriodSummaryStrip: React.FC<PeriodSummaryStripProps> = ({
   const isNetPositive = netTotal >= 0;
 
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-4 p-2 sm:p-3 rounded-2xl bg-surface/60 border border-border/60 backdrop-blur-sm">
-      {/* Income Card */}
-      <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-surface/80 border border-border/60">
-        <div className="w-7 h-7 rounded-lg bg-income/10 border border-income/20 flex items-center justify-center text-income shrink-0">
-          <ArrowDownLeft className="w-4 h-4" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[10px] font-mono text-muted uppercase tracking-wider block truncate">
-            Ingresos
-          </span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-income tracking-tight block truncate">
-            +{formatCurrency(totalIncome, currency)}
-          </span>
-        </div>
+    <div className="flex items-center gap-4 sm:gap-6 px-3.5 py-2 rounded-md bg-surface/40 border border-border/70 text-xs font-mono">
+      <div className="flex items-center gap-1.5">
+        <span className="text-muted">Ingresos:</span>
+        <span className="text-income font-medium">+{formatCurrency(totalIncome, currency)}</span>
       </div>
 
-      {/* Expense Card */}
-      <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-surface/80 border border-border/60">
-        <div className="w-7 h-7 rounded-lg bg-expense/10 border border-expense/20 flex items-center justify-center text-expense shrink-0">
-          <ArrowUpRight className="w-4 h-4" />
-        </div>
-        <div className="min-w-0">
-          <span className="text-[10px] font-mono text-muted uppercase tracking-wider block truncate">
-            Gastos
-          </span>
-          <span className="text-xs sm:text-sm font-bold font-mono text-expense tracking-tight block truncate">
-            -{formatCurrency(totalExpense, currency)}
-          </span>
-        </div>
+      <span className="text-border">|</span>
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-muted">Gastos:</span>
+        <span className="text-text font-medium">-{formatCurrency(totalExpense, currency)}</span>
       </div>
 
-      {/* Net Card */}
-      <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-surface/80 border border-border/60">
-        <div
-          className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
-            isNetPositive
-              ? "bg-positive/10 border-positive/20 text-positive"
-              : "bg-expense/10 border-expense/20 text-expense"
-          }`}
-        >
-          {isNetPositive ? (
-            <TrendingUp className="w-4 h-4" />
-          ) : (
-            <TrendingDown className="w-4 h-4" />
-          )}
-        </div>
-        <div className="min-w-0">
-          <span className="text-[10px] font-mono text-muted uppercase tracking-wider block truncate">
-            Neto
-          </span>
-          <span
-            className={`text-xs sm:text-sm font-bold font-mono tracking-tight block truncate ${
-              isNetPositive ? "text-positive" : "text-expense"
-            }`}
-          >
-            {isNetPositive ? "+" : "-"}{formatCurrency(netTotal, currency)}
-          </span>
-        </div>
+      <span className="text-border">|</span>
+
+      <div className="flex items-center gap-1.5">
+        <span className="text-muted">Neto:</span>
+        <span className={`font-semibold ${isNetPositive ? "text-income" : "text-expense"}`}>
+          {isNetPositive ? "+" : "-"}{formatCurrency(netTotal, currency)}
+        </span>
       </div>
     </div>
   );

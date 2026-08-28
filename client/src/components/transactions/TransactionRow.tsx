@@ -3,7 +3,7 @@ import { Transaction } from "@/lib/api/transactions";
 import { CategoryBadge } from "./CategoryBadge";
 import { CategoryPickerPopover } from "@/components/categories/CategoryPickerPopover";
 import { CategoryItem } from "@/lib/api/categories";
-import { Tag, ArrowDownLeft, ArrowUpRight, ArrowLeftRight, Landmark } from "lucide-react";
+import { Tag, ArrowDownLeft, ArrowUpRight, ArrowLeftRight } from "lucide-react";
 
 interface TransactionRowProps {
   transaction: Transaction;
@@ -24,8 +24,10 @@ function formatCurrency(amountStr: string, currency: string): { formatted: strin
   let symbol = "";
   switch (currency.toUpperCase()) {
     case "EUR":
-      symbol = "€";
-      break;
+      return {
+        formatted: `${isNegative ? "-" : "+"}€${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(isNaN(num) ? 0 : num))}`,
+        isNegative
+      };
     case "GBP":
       symbol = "£";
       break;
@@ -75,48 +77,42 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
   return (
     <div
       onClick={() => onSelectTransaction?.(transaction)}
-      className="group flex items-center justify-between py-3 px-3.5 sm:px-4 bg-surface/40 hover:bg-surface-elevated/80 transition-colors duration-150 gap-3 cursor-pointer border-b border-border/30 last:border-b-0"
+      className="group flex items-center justify-between py-2.5 px-4 hover:bg-surface-elevated transition-colors duration-100 gap-3 cursor-pointer border-b border-border/50 last:border-b-0"
     >
-      {/* Left: Transaction Icon & Main Info */}
+      {/* Left: Node Icon & Main Concept */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        {/* Semantic Icon */}
         <div
-          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+          className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${
             isTransfer
-              ? "bg-transfer/10 border-transfer/20 text-transfer"
+              ? "bg-transfer/10 border-transfer/30 text-transfer"
               : isNegative
-              ? "bg-surface border-border/80 text-muted group-hover:text-text"
-              : "bg-income/10 border-income/20 text-income"
+              ? "bg-surface-elevated border-border text-muted"
+              : "bg-income/10 border-income/30 text-income"
           }`}
         >
           {isTransfer ? (
-            <ArrowLeftRight className="w-4 h-4" />
+            <ArrowLeftRight className="w-3 h-3" />
           ) : isNegative ? (
-            <ArrowUpRight className="w-4 h-4" />
+            <ArrowUpRight className="w-3 h-3" />
           ) : (
-            <ArrowDownLeft className="w-4 h-4" />
+            <ArrowDownLeft className="w-3 h-3" />
           )}
         </div>
 
-        {/* Text Details */}
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <p className="text-xs sm:text-sm font-semibold text-text group-hover:text-white transition-colors truncate">
+        <div className="min-w-0 flex-1 flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+          <p className="text-xs sm:text-sm font-medium text-text group-hover:text-white transition-colors truncate">
             {transaction.description || "Transacción sin concepto"}
           </p>
 
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 shrink-0">
             {transaction.bankName && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono text-muted bg-bg/80 border border-border/60 shrink-0">
-                <Landmark className="w-2.5 h-2.5" />
-                <span>{transaction.bankName}</span>
-                {ibanSuffix && (
-                  <span className="text-text/70">••{ibanSuffix}</span>
-                )}
+              <span className="text-[10px] font-mono text-muted px-1.5 py-0.2 rounded bg-surface-elevated border border-border">
+                {transaction.bankName}{ibanSuffix ? ` ••${ibanSuffix}` : ""}
               </span>
             )}
 
             {meta?.mccInfo && (
-              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-mono text-muted/80 bg-surface border border-border/40 shrink-0">
+              <span className="text-[10px] font-mono text-muted/80 hidden md:inline">
                 {meta.mccInfo.name}
               </span>
             )}
@@ -134,7 +130,7 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
                     setIsPickerOpen((prev) => !prev);
                   }}
                   title="Cambiar categoría"
-                  className="cursor-pointer hover:opacity-80 transition-opacity active:scale-95 focus:outline-hidden"
+                  className="cursor-pointer hover:opacity-80 transition-opacity active:scale-95"
                 >
                   <CategoryBadge category={transaction.category} />
                 </button>
@@ -146,10 +142,10 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
                     setIsPickerOpen((prev) => !prev);
                   }}
                   title="Asignar categoría"
-                  className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono text-muted/70 hover:text-text bg-border/20 hover:bg-border/60 border border-border/40 hover:border-accent/30 transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono text-muted hover:text-text bg-surface-elevated border border-border hover:border-accent/40 transition-colors cursor-pointer"
                 >
                   <Tag className="w-2.5 h-2.5" />
-                  <span>Categorizar</span>
+                  <span>Categoría</span>
                 </button>
               )}
 
@@ -168,7 +164,7 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
       {/* Right: Amount */}
       <div className="text-right shrink-0">
         <span
-          className={`font-mono text-xs sm:text-sm font-bold tracking-tight whitespace-nowrap ${
+          className={`font-mono text-xs sm:text-sm font-semibold tracking-tight whitespace-nowrap ${
             isTransfer
               ? "text-transfer"
               : isNegative

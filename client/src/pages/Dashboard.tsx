@@ -82,31 +82,28 @@ export const Dashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-5xl mx-auto animate-pulse">
-        <div className="h-64 rounded-3xl bg-surface border border-border/80" />
-        <div className="space-y-4">
-          <div className="h-5 w-40 rounded-full bg-surface border border-border/80" />
-          <AccountGrid accounts={[]} isLoading={true} />
-        </div>
+      <div className="space-y-4 max-w-5xl mx-auto animate-pulse">
+        <div className="h-28 rounded-md bg-surface/50 border border-border/80" />
+        <div className="h-64 rounded-md bg-surface/30 border border-border/80" />
       </div>
     );
   }
 
   if (error && accounts.length === 0) {
     return (
-      <div className="max-w-md mx-auto my-12 p-8 rounded-3xl bg-surface border border-negative/30 text-center space-y-4">
-        <div className="w-12 h-12 rounded-full bg-negative/10 text-negative flex items-center justify-center mx-auto">
-          <AlertCircle className="w-6 h-6" />
+      <div className="max-w-md mx-auto my-12 p-8 rounded-md bg-surface border border-expense/30 text-center space-y-4">
+        <div className="w-10 h-10 rounded-full bg-expense/10 text-expense flex items-center justify-center mx-auto">
+          <AlertCircle className="w-5 h-5" />
         </div>
-        <h2 className="text-base font-bold text-text">Error al cargar datos</h2>
+        <h2 className="text-base font-semibold text-text">Error al sincronizar datos</h2>
         <p className="text-xs text-muted font-mono">{error}</p>
         <button
           type="button"
           onClick={() => refreshData()}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-bg font-semibold text-xs uppercase tracking-wider hover:bg-accent/90 cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-bg font-semibold text-xs transition-colors cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          Reintentar
+          <span>Reintentar</span>
         </button>
       </div>
     );
@@ -114,43 +111,41 @@ export const Dashboard: React.FC = () => {
 
   if (accounts.length === 0) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-8 sm:p-12 rounded-3xl bg-surface border border-border/80 text-center space-y-6 shadow-xl">
-        <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 text-accent flex items-center justify-center mx-auto">
-          <Landmark className="w-8 h-8" />
+      <div className="max-w-xl mx-auto my-12 p-8 rounded-md bg-surface/50 border border-border text-center space-y-5">
+        <div className="w-12 h-12 rounded-full bg-surface-elevated border border-border text-accent flex items-center justify-center mx-auto">
+          <Landmark className="w-6 h-6" />
         </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold tracking-tight text-text">Sin bancos conectados</h2>
-          <p className="text-sm text-muted max-w-md mx-auto">
-            Conectá tus cuentas de Santander, Revolut u Open Banking para visualizar tus saldos consolidados y movimientos.
+        <div className="space-y-1.5">
+          <h2 className="text-xl font-bold tracking-tight text-text">Sin cuentas conectadas</h2>
+          <p className="text-xs text-muted max-w-md mx-auto">
+            Conectá tus cuentas de Santander, Revolut o bancos compatibles para consolidar tus saldos y movimientos en un solo lugar.
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
           <Link
             to="/connect"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-bg font-semibold text-sm hover:bg-accent/90 shadow-md transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-accent text-bg font-semibold text-xs hover:bg-accent/90 transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            Conectar Primer Banco
+            <Plus className="w-3.5 h-3.5" />
+            <span>Conectar primer banco</span>
           </Link>
           <button
             type="button"
             onClick={handleOpenCashModal}
             disabled={isInitializingCash}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-bg border border-border text-text font-semibold text-sm hover:bg-border/60 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface hover:bg-surface-elevated border border-border text-text font-medium text-xs transition-colors cursor-pointer"
           >
-            <Wallet className="w-4 h-4 text-emerald-400" />
-            Crear Cuenta Efectivo
+            <Wallet className="w-3.5 h-3.5 text-income" />
+            <span>Crear cuenta efectivo</span>
           </button>
         </div>
       </div>
     );
   }
 
-  const activeAccountsCount = accounts.filter((a) => a.isActive).length;
-
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Revolut Hero Section */}
+    <div className="space-y-4 max-w-5xl mx-auto animate-in fade-in duration-150">
+      {/* GitHub Primer Document Balance Header */}
       <TotalBalance
         totals={totalBalance}
         lastSyncedAt={lastSyncedAt}
@@ -160,37 +155,26 @@ export const Dashboard: React.FC = () => {
         isInitializingCash={isInitializingCash}
       />
 
-      {/* Financial Cycle Minimal Chip */}
-      <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-surface/60 border border-border/60 text-xs">
-        <div className="flex items-center gap-2 text-muted">
+      {/* Financial Cycle Inline Status Bar */}
+      <div className="flex items-center justify-between px-3 py-1.5 rounded-md bg-surface/40 border border-border text-xs font-mono text-muted">
+        <div className="flex items-center gap-2">
           <Calendar className="w-3.5 h-3.5 text-accent" />
-          <span className="font-medium text-text">Ciclo {cycleInfo.label}:</span>
-          <span className="font-mono">{cycleInfo.rangeLabel}</span>
+          <span className="text-text font-medium">Ciclo {cycleInfo.label}:</span>
+          <span>{cycleInfo.rangeLabel}</span>
         </div>
-        <span className="font-mono text-[11px] text-muted">
+        <span className="text-[11px]">
           {cutoffDay > 1 ? `Corte día ${cutoffDay}` : "Mes natural"}
         </span>
       </div>
 
-      {/* Accounts Section */}
-      <div className="space-y-3.5">
-        <div className="flex items-center justify-between px-1">
-          <div>
-            <h2 className="text-base font-semibold tracking-tight text-text">Cuentas</h2>
-          </div>
-          <span className="text-xs font-mono text-muted">
-            {activeAccountsCount} de {accounts.length} activas
-          </span>
-        </div>
-
-        <AccountGrid
-          accounts={accounts}
-          isLoading={false}
-          onEdit={(acc) => setEditingAccount(acc)}
-          onToggleActive={handleToggleActive}
-          onMoveAccount={handleMoveAccount}
-        />
-      </div>
+      {/* GitHub Primer Accounts Box */}
+      <AccountGrid
+        accounts={accounts}
+        isLoading={false}
+        onEdit={(acc) => setEditingAccount(acc)}
+        onToggleActive={handleToggleActive}
+        onMoveAccount={handleMoveAccount}
+      />
 
       {/* Modals */}
       <EditAccountModal

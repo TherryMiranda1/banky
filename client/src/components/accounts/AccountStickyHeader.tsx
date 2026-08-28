@@ -57,55 +57,51 @@ export const AccountStickyHeader: React.FC<AccountStickyHeaderProps> = ({
 
   return (
     <div
-      className={`fixed top-14 lg:top-16 left-0 right-0 lg:left-64 z-20 transition-all duration-300 pointer-events-none ${
+      className={`fixed top-14 lg:top-16 left-0 right-0 lg:left-64 z-20 transition-all duration-200 pointer-events-none ${
         isVisible
           ? "opacity-100 translate-y-0 pointer-events-auto"
-          : "opacity-0 -translate-y-3 pointer-events-none"
+          : "opacity-0 -translate-y-2 pointer-events-none"
       }`}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
-        <div className="flex items-center justify-between gap-4 px-4 py-2 rounded-2xl bg-surface/90 border border-border/80 shadow-2xl backdrop-blur-xl">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        <div className="flex items-center justify-between gap-4 px-4 py-2 rounded-md bg-surface/95 border border-border shadow-lg backdrop-blur-md">
+          <div className="flex items-center gap-2.5 min-w-0">
             {isGlobalView ? (
-              <div className="w-8 h-8 rounded-xl bg-white shadow-xs flex items-center justify-center text-slate-800 shrink-0">
-                <Layers className="w-4 h-4 text-slate-700" />
-              </div>
+              <Layers className="w-4 h-4 text-text shrink-0" />
             ) : (
               <BankLogo bankName={account?.bankName || ""} logoUrl={account?.logoUrl} size="sm" />
             )}
 
-            <div className="min-w-0">
-              <h2 className="text-sm font-semibold tracking-tight text-text truncate">
+            <div className="min-w-0 flex items-center gap-2">
+              <h2 className="text-xs sm:text-sm font-semibold text-text truncate">
                 {bankName}
               </h2>
-              <p className="text-[11px] font-mono text-muted truncate">
+              <span className="text-[11px] font-mono text-muted truncate">
                 {isGlobalView
-                  ? `${selectedCount}/${totalCount} cuentas activas`
+                  ? `(${selectedCount}/${totalCount})`
                   : account?.iban
-                  ? `•••• ${account.iban.replace(/\s+/g, "").slice(-4)}`
-                  : "Cuenta activa"}
-              </p>
+                  ? `••${account.iban.replace(/\s+/g, "").slice(-4)}`
+                  : ""}
+              </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="text-right">
-              <span
-                className={`font-mono text-base sm:text-lg font-bold tracking-tight ${
-                  isNegative ? "text-expense" : "text-text"
-                }`}
-              >
-                {formatCurrencySymbol(currency)}{formatBalanceAmount(balanceNum)}
-              </span>
-            </div>
+            <span
+              className={`font-mono text-sm sm:text-base font-bold tracking-tight ${
+                isNegative ? "text-expense" : "text-text"
+              }`}
+            >
+              {formatCurrencySymbol(currency)}{formatBalanceAmount(balanceNum)}
+            </span>
 
-            <div className="flex items-center gap-1 border-l border-border/60 pl-2">
+            <div className="flex items-center gap-1 border-l border-border pl-2">
               {onRefresh && (
                 <button
                   type="button"
                   onClick={onRefresh}
-                  title="Refrescar datos"
-                  className="p-1.5 rounded-lg bg-surface hover:bg-border/60 text-muted hover:text-text transition-colors cursor-pointer"
+                  title="Sincronizar"
+                  className="p-1 rounded text-muted hover:text-text cursor-pointer transition-colors"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
@@ -113,8 +109,8 @@ export const AccountStickyHeader: React.FC<AccountStickyHeaderProps> = ({
               <button
                 type="button"
                 onClick={onExportExcel}
-                title="Exportar a Excel"
-                className="p-1.5 rounded-lg bg-surface hover:bg-border/60 text-muted hover:text-positive transition-colors cursor-pointer"
+                title="Exportar CSV"
+                className="p-1 rounded text-muted hover:text-positive cursor-pointer transition-colors"
               >
                 <FileSpreadsheet className="w-3.5 h-3.5 text-positive" />
               </button>

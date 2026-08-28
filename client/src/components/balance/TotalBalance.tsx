@@ -1,5 +1,5 @@
 import React from "react";
-import { RefreshCw, Clock, Plus, DollarSign, ArrowUpRight, TrendingUp } from "lucide-react";
+import { RefreshCw, Plus, Wallet, CheckCircle, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface TotalBalanceProps {
@@ -34,16 +34,16 @@ function formatAmount(amountStr: string): string {
 }
 
 function formatRelativeTime(dateStr: string | null): string {
-  if (!dateStr) return "Never";
+  if (!dateStr) return "Nunca";
   try {
     const date = new Date(dateStr);
     const now = new Date();
     const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffSec < 60) return "Just now";
-    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    if (diffSec < 60) return "hace un momento";
+    if (diffSec < 3600) return `hace ${Math.floor(diffSec / 60)} min`;
+    if (diffSec < 86400) return `hace ${Math.floor(diffSec / 3600)} h`;
+    return date.toLocaleDateString("es-ES", { month: "short", day: "numeric" });
   } catch {
     return dateStr;
   }
@@ -65,119 +65,86 @@ export const TotalBalance: React.FC<TotalBalanceProps> = ({
   const otherCurrencies = currencies.filter((c) => c !== primaryCurrency);
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-surface border border-border/80 p-6 sm:p-8 shadow-xl">
-      {/* Subtle background ambient glows */}
-      <div className="absolute top-0 right-1/4 w-72 h-72 bg-accent/[0.04] rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-60 h-60 bg-blue-500/[0.03] rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 flex flex-col items-center text-center space-y-6">
-        {/* Top bar: Status & Live indicator */}
-        <div className="flex items-center justify-between w-full">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-bg/80 border border-border/60 text-[11px] font-mono text-muted">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-            <span>Total Balance</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 text-xs text-muted font-mono bg-bg/60 px-2.5 py-1 rounded-full border border-border/40">
-            <Clock className="w-3 h-3 text-muted/80" />
-            <span>{formatRelativeTime(lastSyncedAt)}</span>
-          </div>
-        </div>
-
-        {/* Primary Hero Balance */}
-        <div className="space-y-2 py-2">
-          <div className="flex items-baseline justify-center gap-1">
-            <span className="text-2xl sm:text-3xl font-mono text-muted font-light">
-              {formatCurrencySymbol(primaryCurrency)}
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-b border-border/80 pb-6">
+      {/* Balance & Status Details */}
+      <div className="space-y-2 min-w-0">
+        <div>
+          <span className="text-xs font-mono text-muted uppercase tracking-wider block">
+            Patrimonio Total Consolidado
+          </span>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-3xl sm:text-4xl font-bold font-mono tracking-tight text-text">
+              {formatCurrencySymbol(primaryCurrency)}{formatAmount(primaryAmount)}
             </span>
-            <span className="text-4xl sm:text-6xl font-bold font-mono tracking-tight text-text">
-              {formatAmount(primaryAmount)}
-            </span>
-            <span className="text-xs sm:text-sm font-mono text-muted font-medium ml-1">
+            <span className="text-xs font-mono text-muted uppercase">
               {primaryCurrency}
             </span>
-          </div>
 
-          {/* Secondary Currencies (Pills) */}
-          {otherCurrencies.length > 0 && (
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-              {otherCurrencies.map((curr) => (
-                <div
-                  key={curr}
-                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-bg/80 border border-border text-xs font-mono text-text"
-                >
-                  <TrendingUp className="w-3 h-3 text-accent" />
-                  <span className="text-muted">{curr}:</span>
-                  <span className="font-semibold">
-                    {formatCurrencySymbol(curr)}
-                    {formatAmount(totals[curr] || "0.00")}
+            {/* Other Currencies Inline */}
+            {otherCurrencies.length > 0 && (
+              <div className="flex items-center gap-2 ml-3">
+                {otherCurrencies.map((curr) => (
+                  <span
+                    key={curr}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-elevated border border-border text-xs font-mono text-muted"
+                  >
+                    <TrendingUp className="w-3 h-3 text-accent" />
+                    <span>{formatCurrencySymbol(curr)}{formatAmount(totals[curr] || "0.00")}</span>
                   </span>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Revolut-style Quick Action Buttons */}
-        <div className="flex items-center justify-center gap-3 sm:gap-6 pt-2 pb-1 flex-wrap">
-          {/* Connect / Add Bank */}
-          <Link
-            to="/connect"
-            className="flex flex-col items-center gap-1.5 group cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-full bg-accent/15 border border-accent/30 text-accent flex items-center justify-center group-hover:bg-accent group-hover:text-bg transition-all duration-200 shadow-sm group-hover:scale-105">
-              <Plus className="w-5 h-5" />
-            </div>
-            <span className="text-[11px] font-medium text-text group-hover:text-accent transition-colors">
-              Conectar
-            </span>
-          </Link>
+        {/* GitHub Status Line */}
+        <div className="flex items-center gap-2 text-xs text-muted flex-wrap">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-positive/10 border border-positive/30 text-positive font-medium text-[11px]">
+            <CheckCircle className="w-3 h-3" />
+            Conectado
+          </span>
+          <span>•</span>
+          <span className="font-mono text-[11px]">
+            Actualizado {formatRelativeTime(lastSyncedAt)}
+          </span>
+          <span>•</span>
+          <span className="font-mono text-[11px] text-muted/80">
+            Open Banking AISP (Solo lectura)
+          </span>
+        </div>
+      </div>
 
-          {/* Cash Transaction */}
-          {onOpenCashModal && (
-            <button
-              type="button"
-              onClick={onOpenCashModal}
-              disabled={isInitializingCash}
-              className="flex flex-col items-center gap-1.5 group cursor-pointer disabled:opacity-50"
-            >
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-bg transition-all duration-200 shadow-sm group-hover:scale-105">
-                <DollarSign className="w-5 h-5" />
-              </div>
-              <span className="text-[11px] font-medium text-text group-hover:text-emerald-400 transition-colors">
-                Efectivo
-              </span>
-            </button>
-          )}
+      {/* Action Buttons (GitHub Primer Style) */}
+      <div className="flex items-center gap-2 shrink-0 flex-wrap">
+        <Link
+          to="/connect"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent hover:bg-accent/90 text-bg font-semibold text-xs transition-colors shadow-xs cursor-pointer"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Conectar banco</span>
+        </Link>
 
-          {/* Sync Accounts */}
+        {onOpenCashModal && (
           <button
             type="button"
-            onClick={onSync}
-            disabled={isSyncing}
-            className="flex flex-col items-center gap-1.5 group cursor-pointer disabled:opacity-50"
+            onClick={onOpenCashModal}
+            disabled={isInitializingCash}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-elevated border border-border text-text font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
           >
-            <div className="w-12 h-12 rounded-full bg-surface border border-border text-muted flex items-center justify-center group-hover:border-accent/40 group-hover:text-accent transition-all duration-200 shadow-sm group-hover:scale-105">
-              <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin text-accent" : ""}`} />
-            </div>
-            <span className="text-[11px] font-medium text-muted group-hover:text-text transition-colors">
-              {isSyncing ? "Sincronizando" : "Sincronizar"}
-            </span>
+            <Wallet className="w-3.5 h-3.5 text-income" />
+            <span>Efectivo</span>
           </button>
+        )}
 
-          {/* View Details / All Transactions */}
-          <Link
-            to="/accounts"
-            className="flex flex-col items-center gap-1.5 group cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-full bg-surface border border-border text-muted flex items-center justify-center group-hover:border-border/80 group-hover:text-text transition-all duration-200 shadow-sm group-hover:scale-105">
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-            <span className="text-[11px] font-medium text-muted group-hover:text-text transition-colors">
-              Movimientos
-            </span>
-          </Link>
-        </div>
+        <button
+          type="button"
+          onClick={onSync}
+          disabled={isSyncing}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface hover:bg-surface-elevated border border-border text-text font-medium text-xs transition-colors cursor-pointer disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-muted ${isSyncing ? "animate-spin text-accent" : ""}`} />
+          <span>{isSyncing ? "Sincronizando..." : "Sincronizar"}</span>
+        </button>
       </div>
     </div>
   );

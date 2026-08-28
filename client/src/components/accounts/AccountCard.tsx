@@ -1,6 +1,6 @@
 import React from "react";
 import { Account } from "@/lib/api/accounts";
-import { AlertTriangle, Power, Settings2, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, Power, Settings2, ChevronUp, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BankLogo } from "./BankLogo";
 import { formatFirstName } from "@/lib/format-utils";
@@ -48,142 +48,109 @@ export const AccountCard: React.FC<AccountCardProps> = ({
           handleCardClick();
         }
       }}
-      aria-label={`Ver detalles de la cuenta ${displayName}`}
-      className={`group relative rounded-2xl bg-surface border border-border/80 p-5 flex flex-col justify-between h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-lg cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-accent/50 ${
-        !isActive ? "opacity-60 grayscale-[20%]" : ""
+      className={`group flex items-center justify-between py-3.5 px-4 bg-surface/30 hover:bg-surface-elevated transition-colors duration-100 cursor-pointer border-b border-border/50 last:border-b-0 ${
+        !isActive ? "opacity-60" : ""
       }`}
     >
-      {/* Top Header: Logo + Status Badges + Action Buttons */}
-      <div>
-        <div className="flex items-center justify-between gap-3 mb-3.5">
-          <BankLogo bankName={account.bankName} logoUrl={account.logoUrl} size="md" />
+      {/* Left: Bank Logo + Info */}
+      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+        <BankLogo bankName={account.bankName} logoUrl={account.logoUrl} size="md" />
 
-          {/* Action buttons & status badge */}
-          <div
-            className="flex items-center gap-1.5 shrink-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {isExpired && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-negative/10 text-negative border border-negative/20">
-                <AlertTriangle className="w-3 h-3" />
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-semibold text-sm text-text group-hover:text-white transition-colors truncate">
+              {displayName}
+            </h3>
+
+            {isExpired ? (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-mono bg-expense/10 text-expense border border-expense/20">
+                <AlertTriangle className="w-2.5 h-2.5" />
                 Expirada
               </span>
-            )}
-
-            {!isActive && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono bg-border text-muted">
+            ) : !isActive ? (
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-mono bg-surface-elevated text-muted border border-border">
                 Inactiva
               </span>
-            )}
-
-            {onMove && (
-              <div className="flex items-center bg-bg/80 border border-border/60 rounded-xl p-0.5 shadow-sm">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMove("prev");
-                  }}
-                  disabled={isFirst}
-                  aria-label="Mover cuenta hacia la izquierda"
-                  title="Mover hacia la izquierda"
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-muted hover:text-text hover:bg-border/60 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMove("next");
-                  }}
-                  disabled={isLast}
-                  aria-label="Mover cuenta hacia la derecha"
-                  title="Mover hacia la derecha"
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-muted hover:text-text hover:bg-border/60 disabled:opacity-20 cursor-pointer disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            {onEdit && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit(account);
-                }}
-                aria-label="Configurar cuenta"
-                title="Configurar cuenta"
-                className="w-7 h-7 flex items-center justify-center rounded-xl bg-bg/60 border border-border/40 text-muted hover:text-text hover:bg-border/60 transition-colors cursor-pointer"
-              >
-                <Settings2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-
-            {onToggleActive && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleActive(account);
-                }}
-                aria-label={isActive ? "Desactivar cuenta" : "Activar cuenta"}
-                title={isActive ? "Desactivar cuenta" : "Activar cuenta"}
-                className={`w-7 h-7 flex items-center justify-center rounded-xl bg-bg/60 border border-border/40 transition-colors cursor-pointer ${
-                  isActive
-                    ? "text-accent/80 hover:text-accent hover:bg-accent/10"
-                    : "text-muted hover:text-text hover:bg-border/60"
-                }`}
-              >
-                <Power className="w-3.5 h-3.5" />
-              </button>
+            ) : (
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded border ${bankTheme.badgeBg} ${bankTheme.badgeText}`}>
+                {bankTheme.label}
+              </span>
             )}
           </div>
-        </div>
 
-        {/* Account Title & Subtitle (Full width, no aggressive truncation) */}
-        <div className="space-y-1">
-          <h3 className="font-semibold text-sm sm:text-base text-text group-hover:text-accent transition-colors leading-snug line-clamp-2">
-            {displayName}
-          </h3>
-          <div className="flex items-center gap-2 text-xs text-muted font-mono flex-wrap">
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full border ${bankTheme.badgeBg} ${bankTheme.badgeText}`}>
-              {bankTheme.label}
-            </span>
-            <span>{maskIban(account.iban)}</span>
-          </div>
+          <p className="text-xs text-muted font-mono truncate">
+            {maskIban(account.iban)} {account.nickname ? `(${account.bankName})` : ""}
+          </p>
         </div>
       </div>
 
-      {/* Card Footer: Clean Available Balance without redundant action button */}
-      <div className="mt-5 pt-3.5 border-t border-border/40">
-        <span className="text-[10px] text-muted font-mono uppercase tracking-wider block">
-          Saldo Disponible
-        </span>
-        <div className="flex items-baseline gap-1 mt-0.5">
-          <span className="text-sm font-mono text-muted">
-            {formatCurrencySymbol(account.currency)}
-          </span>
+      {/* Right: Balance + Quick Hover Actions */}
+      <div className="flex items-center gap-4 shrink-0">
+        <div className="text-right">
           <span
-            className={`text-2xl font-bold font-mono tracking-tight ${
-              isNegative ? "text-negative" : "text-text group-hover:text-accent transition-colors"
+            className={`font-mono text-sm sm:text-base font-bold tracking-tight block ${
+              isNegative ? "text-expense" : "text-text group-hover:text-accent transition-colors"
             }`}
           >
-            {formatBalanceAmount(balanceAmountStr)}
+            {formatCurrencySymbol(account.currency)}{formatBalanceAmount(balanceAmountStr)}
           </span>
-          <span className="text-xs font-mono text-muted ml-0.5">
+          <span className="text-[10px] font-mono text-muted uppercase block">
             {account.currency}
           </span>
         </div>
 
-        {account.lastBalance?.heldAmount && (
-          <div className="mt-1 flex items-center gap-1.5 text-[10px] font-mono text-amber-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-            <span>Retención: {formatCurrencySymbol(account.currency)}{account.lastBalance.heldAmount}</span>
-          </div>
-        )}
+        {/* Quick Actions (revealed on hover) */}
+        <div
+          className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {onMove && (
+            <div className="flex flex-col">
+              <button
+                type="button"
+                onClick={() => onMove("prev")}
+                disabled={isFirst}
+                title="Mover arriba"
+                className="p-0.5 text-muted hover:text-text disabled:opacity-20 cursor-pointer"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onMove("next")}
+                disabled={isLast}
+                title="Mover abajo"
+                className="p-0.5 text-muted hover:text-text disabled:opacity-20 cursor-pointer"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {onEdit && (
+            <button
+              type="button"
+              onClick={() => onEdit(account)}
+              title="Ajustes de cuenta"
+              className="p-1.5 rounded-md hover:bg-surface border border-transparent hover:border-border text-muted hover:text-text cursor-pointer transition-colors"
+            >
+              <Settings2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+
+          {onToggleActive && (
+            <button
+              type="button"
+              onClick={() => onToggleActive(account)}
+              title={isActive ? "Desactivar cuenta" : "Activar cuenta"}
+              className={`p-1.5 rounded-md hover:bg-surface border border-transparent hover:border-border transition-colors cursor-pointer ${
+                isActive ? "text-muted hover:text-expense" : "text-muted hover:text-positive"
+              }`}
+            >
+              <Power className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

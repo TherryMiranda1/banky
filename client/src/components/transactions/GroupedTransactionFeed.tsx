@@ -114,18 +114,18 @@ export const GroupedTransactionFeed: React.FC<GroupedTransactionFeedProps> = ({
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl bg-surface/80 border border-border/70 overflow-hidden divide-y divide-border/40 animate-pulse">
-        <div className="px-5 py-3.5 bg-surface border-b border-border flex items-center justify-between">
-          <div className="h-4 w-32 rounded-md bg-border/60" />
-          <div className="h-4 w-20 rounded-md bg-border/60" />
+      <div className="rounded-md border border-border bg-surface/30 overflow-hidden divide-y divide-border/40 animate-pulse">
+        <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between">
+          <div className="h-4 w-32 rounded bg-border/60" />
+          <div className="h-4 w-20 rounded bg-border/60" />
         </div>
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3.5">
-              <div className="w-9 h-9 rounded-xl bg-border/40" />
-              <div className="space-y-1.5">
-                <div className="h-3.5 w-36 bg-border/50 rounded" />
-                <div className="h-2.5 w-24 bg-border/30 rounded" />
+          <div key={i} className="p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-border/40" />
+              <div className="space-y-1">
+                <div className="h-3.5 w-40 bg-border/50 rounded" />
+                <div className="h-2.5 w-20 bg-border/30 rounded" />
               </div>
             </div>
             <div className="h-4 w-16 bg-border/50 rounded" />
@@ -137,25 +137,25 @@ export const GroupedTransactionFeed: React.FC<GroupedTransactionFeedProps> = ({
 
   if (transactions.length === 0) {
     return (
-      <div className="rounded-3xl bg-surface/60 border border-border/70 p-12 text-center space-y-3">
-        <div className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center mx-auto text-muted">
-          <Inbox className="w-6 h-6" />
+      <div className="rounded-md border border-border bg-surface/30 p-12 text-center space-y-2">
+        <div className="w-10 h-10 rounded-full bg-surface-elevated border border-border flex items-center justify-center mx-auto text-muted">
+          <Inbox className="w-5 h-5" />
         </div>
-        <h3 className="text-base font-bold text-text">Sin movimientos en este periodo</h3>
+        <h3 className="text-sm font-semibold text-text">No se encontraron movimientos</h3>
         <p className="text-xs text-muted font-mono max-w-sm mx-auto">
-          Probá cambiando el mes o limpiando los filtros para ver más movimientos.
+          Cambiá el periodo o limpiá los filtros de búsqueda para ver más actividad.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Grouped Feed Container */}
-      <div className="rounded-3xl bg-surface/80 border border-border/70 overflow-hidden shadow-xl">
-        {/* Feed Header */}
-        <div className="px-5 py-3 bg-surface/90 border-b border-border/60 flex items-center justify-between">
-          <span className="text-xs font-mono text-muted uppercase tracking-wider">
+    <div className="space-y-3">
+      {/* GitHub Primer Box Layout */}
+      <div className="rounded-md border border-border bg-surface/30 overflow-hidden">
+        {/* Box Header */}
+        <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between">
+          <span className="text-xs font-semibold text-text">
             Historial de Movimientos
           </span>
           <span className="text-xs font-mono text-muted">
@@ -169,10 +169,10 @@ export const GroupedTransactionFeed: React.FC<GroupedTransactionFeedProps> = ({
             const isDailyNetPositive = group.dailyNet >= 0;
 
             return (
-              <div key={group.dateKey} className="border-b border-border/30 last:border-b-0">
-                {/* Date Group Header */}
-                <div className="px-4 sm:px-5 py-2 bg-surface-elevated/90 border-b border-border/40 flex items-center justify-between">
-                  <span className="text-[11px] font-mono font-semibold text-muted uppercase tracking-wider">
+              <div key={group.dateKey} className="border-b border-border/50 last:border-b-0">
+                {/* Date Sub-Header */}
+                <div className="px-4 py-1.5 bg-surface-elevated/60 border-b border-border/40 flex items-center justify-between">
+                  <span className="text-[11px] font-mono font-medium text-muted uppercase tracking-wider">
                     {group.label}
                   </span>
                   <span
@@ -184,8 +184,8 @@ export const GroupedTransactionFeed: React.FC<GroupedTransactionFeedProps> = ({
                   </span>
                 </div>
 
-                {/* Rows for this date */}
-                <div className="divide-y divide-border/20">
+                {/* Rows */}
+                <div className="divide-y divide-border/30">
                   {group.transactions.map((tx) => (
                     <TransactionRow
                       key={tx.id}
@@ -204,20 +204,20 @@ export const GroupedTransactionFeed: React.FC<GroupedTransactionFeedProps> = ({
 
       {/* Infinite Scroll / Load More */}
       {hasMore && (
-        <div className="flex justify-center pt-2">
+        <div className="flex justify-center pt-1">
           <button
             type="button"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-surface hover:bg-border/60 border border-border text-xs font-mono text-text transition-all duration-150 disabled:opacity-50 cursor-pointer shadow-sm hover:border-accent/40"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-surface-elevated hover:bg-border/60 border border-border text-xs font-mono text-text transition-colors disabled:opacity-50 cursor-pointer"
           >
             {isLoadingMore ? (
               <>
-                <Loader2 className="w-4 h-4 text-accent animate-spin" />
-                <span>Cargando más movimientos...</span>
+                <Loader2 className="w-3.5 h-3.5 text-accent animate-spin" />
+                <span>Cargando movimientos...</span>
               </>
             ) : (
-              <span>Cargar más movimientos</span>
+              <span>Cargar más</span>
             )}
           </button>
         </div>

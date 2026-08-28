@@ -1,7 +1,7 @@
 import React from "react";
 import { Account } from "@/lib/api/accounts";
 import { AccountCard } from "./AccountCard";
-import { Plus } from "lucide-react";
+import { Plus, Landmark } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface AccountGridProps {
@@ -21,36 +21,49 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+      <div className="rounded-md border border-border bg-surface/30 overflow-hidden divide-y divide-border/40 animate-pulse">
+        <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between">
+          <div className="h-4 w-32 rounded bg-border/60" />
+          <div className="h-4 w-16 rounded bg-border/60" />
+        </div>
         {[1, 2, 3].map((idx) => (
-          <div
-            key={idx}
-            className="rounded-2xl bg-surface border border-border/80 p-5 h-48 flex flex-col justify-between animate-pulse"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-border/60" />
-                <div className="space-y-2">
-                  <div className="w-28 h-4 rounded bg-border/60" />
-                  <div className="w-16 h-3 rounded bg-border/40" />
-                </div>
+          <div key={idx} className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-border/50" />
+              <div className="space-y-1.5">
+                <div className="w-32 h-4 rounded bg-border/60" />
+                <div className="w-20 h-3 rounded bg-border/40" />
               </div>
             </div>
-            <div className="pt-4 border-t border-border/40 space-y-2">
-              <div className="w-20 h-3 rounded bg-border/40" />
-              <div className="w-32 h-6 rounded bg-border/60" />
-            </div>
+            <div className="w-24 h-5 rounded bg-border/50" />
           </div>
         ))}
       </div>
     );
   }
 
+  const activeCount = accounts.filter((a) => a.isActive).length;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
-      {accounts.map((account, index) => (
-        <div key={account.id} className="h-full">
+    <div className="rounded-md border border-border bg-surface/30 overflow-hidden">
+      {/* Box Header */}
+      <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Landmark className="w-3.5 h-3.5 text-muted" />
+          <span className="text-xs font-semibold text-text">
+            Cuentas bancarias conectadas
+          </span>
+        </div>
+        <span className="text-xs font-mono text-muted">
+          {activeCount} de {accounts.length} activas
+        </span>
+      </div>
+
+      {/* Account Rows */}
+      <div className="divide-y divide-border/40">
+        {accounts.map((account, index) => (
           <AccountCard
+            key={account.id}
             account={account}
             onEdit={onEdit}
             onToggleActive={onToggleActive}
@@ -58,26 +71,25 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
             isFirst={index === 0}
             isLast={index === accounts.length - 1}
           />
-        </div>
-      ))}
+        ))}
+      </div>
 
-      {/* Connect New Bank Action Card */}
-      <Link
-        to="/connect"
-        className="group rounded-2xl bg-surface/40 border border-dashed border-border/80 hover:border-accent/40 p-5 flex flex-col items-center justify-center text-center gap-2.5 h-full min-h-[170px] transition-all duration-200 hover:-translate-y-0.5 hover:bg-surface/80 cursor-pointer select-none"
-      >
-        <div className="w-10 h-10 rounded-full bg-bg border border-border/80 group-hover:border-accent/40 group-hover:bg-accent/10 flex items-center justify-center text-muted group-hover:text-accent transition-all duration-200 group-hover:scale-105">
-          <Plus className="w-5 h-5" />
-        </div>
-        <div>
-          <p className="font-semibold text-sm text-text group-hover:text-accent transition-colors">
-            Conectar banco
-          </p>
-          <p className="text-xs text-muted font-mono mt-0.5">
-            Santander, Revolut, BBVA y más
-          </p>
-        </div>
-      </Link>
+      {/* Box Footer Action: Connect New Bank */}
+      <div className="px-4 py-2.5 bg-surface/20 border-t border-border/60 flex items-center justify-between">
+        <Link
+          to="/connect"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Conectar otra cuenta o banco...</span>
+        </Link>
+        <Link
+          to="/accounts"
+          className="text-[11px] font-mono text-muted hover:text-text transition-colors"
+        >
+          Ver todas las transacciones →
+        </Link>
+      </div>
     </div>
   );
 };
