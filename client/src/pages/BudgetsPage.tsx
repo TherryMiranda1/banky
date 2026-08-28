@@ -173,14 +173,12 @@ export const BudgetsPage: React.FC = () => {
 
             {/* Graphic Distribution & Uncategorized Summary (5 cols on lg) */}
             <div className="lg:col-span-5 space-y-3">
-              <div className="rounded-md border border-border bg-surface/30 overflow-hidden p-4">
-                <CategoryDonutChart
-                  categories={analytics.categories}
-                  uncategorizedSpent={analytics.uncategorized.spentAmount}
-                  totalSpent={analytics.summary.totalSpent}
-                  period={period}
-                />
-              </div>
+              <CategoryDonutChart
+                categories={analytics.categories}
+                uncategorizedSpent={analytics.uncategorized.spentAmount}
+                totalSpent={analytics.summary.totalSpent}
+                period={period}
+              />
 
               {/* Uncategorized notice if any with deep link */}
               {analytics.uncategorized.spentAmount > 0 && (

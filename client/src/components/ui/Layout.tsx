@@ -1,11 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, ShieldCheck, Tags, PieChart, Sparkles, RotateCcw } from "lucide-react";
+import {
+  LayoutDashboard,
+  Wallet,
+  PieChart,
+  Tags,
+  PlusCircle,
+  Search,
+  Sparkles,
+  RotateCcw
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { BankyLogo } from "./BankyLogo";
 import { BottomNav } from "./BottomNav";
 import { CutoffSettingsModal } from "./CutoffSettingsModal";
 import { UserMenuPopover } from "./UserMenuPopover";
+import { BreadcrumbNav } from "./BreadcrumbNav";
+import { GlobalSearchModal } from "./GlobalSearchModal";
 
 interface LayoutProps {
   children?: React.ReactNode;
@@ -15,127 +26,147 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { user, isDemoMode, toggleMockMode, resetDemoData } = useAuth();
   const [isCutoffModalOpen, setIsCutoffModalOpen] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+
+  // Global Keyboard Shortcuts (/ and ⌘K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isInput =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      if ((e.key === "/" && !isInput) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const navItems = [
     { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    { label: "Accounts", href: "/accounts", icon: Wallet },
-    { label: "Budgets", href: "/budgets", icon: PieChart },
-    { label: "Categories", href: "/categories", icon: Tags },
-    { label: "Connect Bank", href: "/connect", icon: PlusCircle }
+    { label: "Cuentas", href: "/accounts", icon: Wallet },
+    { label: "Presupuestos", href: "/budgets", icon: PieChart },
+    { label: "Categorías", href: "/categories", icon: Tags },
+    { label: "Conectar Banco", href: "/connect", icon: PlusCircle }
   ];
 
   return (
-    <div className="flex min-h-screen bg-bg text-text font-sans selection:bg-accent/20 selection:text-accent">
-      {/* Desktop Sidebar (>= 1024px) */}
-      <aside className="hidden lg:flex w-64 border-r border-border bg-surface flex-col shrink-0">
-        <div className="p-6 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-surface border border-border/80 flex items-center justify-center shadow-sm p-1">
-              <BankyLogo size={24} />
-            </div>
-            <div>
-              <h1 className="font-bold text-base tracking-tight text-text">Banky</h1>
-              <p className="text-xs text-muted font-mono">Open Banking AISP</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          </div>
-        </div>
-
-        <nav className="p-4 space-y-1 flex-1">
-          <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted font-mono">
-            Navigation
-          </div>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              item.href === "/"
-                ? location.pathname === "/" || location.pathname === "/dashboard"
-                : location.pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all ${
-                  isActive
-                    ? "bg-accent/10 text-accent border border-accent/20 shadow-sm"
-                    : "text-muted hover:text-text hover:bg-border/50"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? "text-accent" : "text-muted"}`} />
-                <span>{item.label}</span>
+    <div className="min-h-screen bg-bg text-text font-sans selection:bg-accent/20 selection:text-accent flex flex-col">
+      {/* GitHub Primer Global Top Bar */}
+      <header className="sticky top-0 z-30 bg-surface/95 border-b border-border backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Upper Nav Row */}
+          <div className="h-14 flex items-center justify-between gap-4">
+            {/* Left: Logo & Breadcrumbs */}
+            <div className="flex items-center gap-3 min-w-0">
+              <Link to="/" className="flex items-center gap-2 shrink-0">
+                <div className="w-7 h-7 rounded-md bg-surface-elevated border border-border flex items-center justify-center p-1 shadow-xs">
+                  <BankyLogo size={20} />
+                </div>
               </Link>
-            );
-          })}
-        </nav>
 
-        <div className="p-4 border-t border-border bg-bg/50 space-y-3">
-          <div className="flex items-center gap-3 p-2 rounded-md bg-surface border border-border/80 text-xs">
-            <ShieldCheck className="w-4 h-4 text-accent shrink-0" />
-            <div className="truncate">
-              <p className="font-medium text-text">Read-Only AISP</p>
-              <p className="text-muted text-[11px] truncate font-mono">AES-256-GCM Vault</p>
+              <BreadcrumbNav />
+            </div>
+
+            {/* Right: Search Trigger & Actions */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              {/* Command Palette Trigger Button */}
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-md bg-surface-elevated hover:bg-border/60 border border-border text-xs text-muted hover:text-text transition-colors cursor-pointer"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>Buscar o saltar a...</span>
+                <kbd className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-surface border border-border text-muted">
+                  /
+                </kbd>
+              </button>
+
+              {/* Mobile Search Button */}
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className="sm:hidden p-2 rounded-md bg-surface-elevated border border-border text-muted hover:text-text cursor-pointer"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+
+              {isDemoMode && (
+                <div className="hidden xs:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
+                  <Sparkles className="w-3 h-3 animate-pulse shrink-0" />
+                  <span className="font-semibold">Mock</span>
+                  <button
+                    type="button"
+                    onClick={resetDemoData}
+                    title="Restablecer datos mock"
+                    className="underline text-[11px] text-amber-300 hover:text-amber-200 ml-1 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3 h-3 inline" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => toggleMockMode(false)}
+                    title="Desactivar modo mock"
+                    className="text-[11px] hover:underline border-l border-amber-500/30 pl-1.5 ml-1 cursor-pointer"
+                  >
+                    Salir
+                  </button>
+                </div>
+              )}
+
+              {user && (
+                <UserMenuPopover onOpenCutoffModal={() => setIsCutoffModalOpen(true)} />
+              )}
             </div>
           </div>
+
+          {/* Underline Tabs Row (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-1 border-t border-border/40 overflow-x-auto no-scrollbar">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive =
+                item.href === "/"
+                  ? location.pathname === "/" || location.pathname === "/dashboard"
+                  : location.pathname.startsWith(item.href);
+
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  className={`flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
+                    isActive
+                      ? "border-accent text-text font-semibold"
+                      : "border-transparent text-muted hover:text-text hover:border-border"
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? "text-accent" : "text-muted"}`} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
         </div>
-      </aside>
+      </header>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Minimalist Top Header */}
-        <header className="h-14 lg:h-16 border-b border-border bg-surface/60 backdrop-blur px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            {/* Mobile / Tablet Logo (<1024px) */}
-            <Link to="/" className="flex items-center gap-2.5 lg:hidden">
-              <div className="w-7 h-7 rounded-lg bg-surface border border-border/80 flex items-center justify-center shadow-sm p-1">
-                <BankyLogo size={20} />
-              </div>
-              <span className="font-bold text-base tracking-tight text-text">Banky</span>
-            </Link>
+      {/* Main Content Area (Full width, native window scroll) */}
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 pb-24 sm:pb-28 lg:pb-12">
+        {children}
+      </main>
 
-            {isDemoMode && (
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
-                <span className="font-semibold hidden xs:inline">Modo Mock</span>
-                <button
-                  type="button"
-                  onClick={resetDemoData}
-                  title="Restablecer datos de prueba a valores iniciales"
-                  className="inline-flex items-center gap-1 text-[11px] text-amber-300/80 hover:text-amber-200 underline cursor-pointer ml-1"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span className="hidden sm:inline">Restablecer</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleMockMode(false)}
-                  title="Desactivar modo mock y volver a datos reales"
-                  className="text-[11px] text-amber-400/80 hover:text-amber-200 hover:underline cursor-pointer border-l border-amber-500/30 pl-2 ml-1"
-                >
-                  Desactivar
-                </button>
-              </div>
-            )}
-          </div>
-
-
-          <div className="flex items-center gap-3">
-            {user && (
-              <UserMenuPopover onOpenCutoffModal={() => setIsCutoffModalOpen(true)} />
-            )}
-          </div>
-        </header>
-
-
-        {/* Content Container (with generous bottom padding for BottomNav on mobile) */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-32 sm:pb-36 lg:pb-8 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation (<1024px) */}
       <BottomNav />
+
+      {/* Global Command Palette Modal */}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       {/* Cutoff Preferences Modal */}
       <CutoffSettingsModal
@@ -145,4 +176,3 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     </div>
   );
 };
-

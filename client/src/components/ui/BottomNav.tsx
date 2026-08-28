@@ -14,25 +14,25 @@ export const BottomNav: React.FC = () => {
       isActive: pathname === "/" || pathname === "/dashboard"
     },
     {
-      label: "Accounts",
+      label: "Cuentas",
       href: "/accounts",
       icon: Wallet,
       isActive: pathname.startsWith("/accounts")
     },
     {
-      label: "Budgets",
+      label: "Presupuestos",
       href: "/budgets",
       icon: PieChart,
       isActive: pathname.startsWith("/budgets")
     },
     {
-      label: "Categories",
+      label: "Categorías",
       href: "/categories",
       icon: Tags,
       isActive: pathname.startsWith("/categories")
     },
     {
-      label: "Connect",
+      label: "Conectar",
       href: "/connect",
       icon: PlusCircle,
       isActive: pathname === "/connect"

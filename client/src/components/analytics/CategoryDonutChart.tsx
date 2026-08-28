@@ -139,7 +139,7 @@ export const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
 
   if (totalSpent <= 0 || slices.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 bg-surface rounded-2xl border border-border text-center">
+      <div className="flex flex-col items-center justify-center p-8 bg-surface/30 rounded-md border border-border text-center">
         <div className="w-10 h-10 rounded-full bg-border/40 flex items-center justify-center text-muted mb-2.5">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
@@ -153,7 +153,7 @@ export const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
   }
 
   return (
-    <div className="p-5 bg-surface rounded-2xl border border-border shadow-sm">
+    <div className="p-4 bg-surface/30 rounded-md border border-border">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-muted font-mono">
@@ -230,7 +230,7 @@ export const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
                 onMouseLeave={() => setHoveredSliceId(null)}
                 onClick={() => handleCategoryClick(slice)}
                 title={`Ver transacciones de ${slice.name}`}
-                className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-all cursor-pointer group ${
+                className={`w-full flex items-center justify-between p-2 rounded-md text-left transition-all cursor-pointer group ${
                   isHovered
                     ? "bg-border/60 border border-accent/30 shadow-xs"
                     : "bg-bg/40 hover:bg-border/30 border border-transparent"
