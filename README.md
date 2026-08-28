@@ -1,8 +1,11 @@
 <div align="center">
 
 # 🏦 Banky
+<img width="1555" height="862" alt="image" src="https://github.com/user-attachments/assets/adb23ea3-364b-413f-b3d6-7d6f9fefce1d" />
+
 
 **Modern, Privacy-First Open Banking Dashboard & Personal Finance Aggregator**
+<img width="1540" height="840" alt="image" src="https://github.com/user-attachments/assets/822b0415-3099-4ac0-9e0c-89b9a5783c47" />
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6.svg?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
