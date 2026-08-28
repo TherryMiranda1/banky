@@ -1,15 +1,16 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.js";
-import { Lock, Mail, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
 
-  const { login } = useAuth();
+  const { login, loginDemo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,6 +33,19 @@ export const LoginPage: React.FC = () => {
       setError(err?.message || "Error al iniciar sesión. Verifica tus credenciales.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setIsDemoSubmitting(true);
+    setError(null);
+    try {
+      await loginDemo();
+      navigate("/", { replace: true });
+    } catch (err: any) {
+      setError(err?.message || "Error al activar el modo demo.");
+    } finally {
+      setIsDemoSubmitting(false);
     }
   };
 
@@ -106,10 +120,10 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 space-y-3">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isDemoSubmitting}
                 className="w-full flex justify-center items-center gap-2 py-3 px-4 min-h-[44px] rounded-xl text-sm font-semibold text-bg bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-bg shadow-lg shadow-accent/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 cursor-pointer"
               >
                 {isSubmitting ? (
@@ -121,6 +135,31 @@ export const LoginPage: React.FC = () => {
                   <>
                     <span>Entrar a Banky</span>
                     <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-border/80"></div>
+                <span className="flex-shrink mx-3 text-muted text-[11px] font-mono uppercase tracking-wider">o pruébalo sin registro</span>
+                <div className="flex-grow border-t border-border/80"></div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                disabled={isSubmitting || isDemoSubmitting}
+                className="w-full flex justify-center items-center gap-2 py-2.5 px-4 min-h-[44px] rounded-xl text-sm font-medium text-text bg-surface hover:bg-border/60 border border-border/80 hover:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent transition-all duration-200 cursor-pointer shadow-sm group"
+              >
+                {isDemoSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                    <span>Cargando datos demo...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-accent group-hover:scale-110 transition-transform" />
+                    <span>Explorar en Modo Demo (Datos de prueba)</span>
                   </>
                 )}
               </button>
@@ -143,3 +182,4 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+

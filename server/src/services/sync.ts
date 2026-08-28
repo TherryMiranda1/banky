@@ -1,5 +1,5 @@
 import { IBankingAdapter } from "../core/ports/IBankingAdapter.js";
-import { EnableBankingAdapter } from "../core/infra/enable-banking/EnableBankingAdapter.js";
+import { getBankingAdapter } from "../core/infra/adapterFactory.js";
 import {
   AppDatabase,
   getDb,
@@ -33,10 +33,15 @@ export interface SyncResult {
 }
 
 export class SyncService {
+  private readonly adapter: IBankingAdapter;
+
   constructor(
-    private readonly adapter: IBankingAdapter = new EnableBankingAdapter(),
+    adapter?: IBankingAdapter,
     private readonly dbInstance?: AppDatabase
-  ) {}
+  ) {
+    this.adapter = adapter || getBankingAdapter();
+  }
+
 
   private get db(): AppDatabase {
     return this.dbInstance || getDb();

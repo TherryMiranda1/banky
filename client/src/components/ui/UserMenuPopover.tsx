@@ -8,7 +8,9 @@ import {
   ShieldCheck,
   LogOut,
   ChevronDown,
-  CheckCircle
+  CheckCircle,
+  RotateCcw,
+  Sparkles
 } from "lucide-react";
 
 import { formatFirstName } from "@/lib/format-utils";
@@ -18,7 +20,7 @@ interface UserMenuPopoverProps {
 }
 
 export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffModal }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isDemoMode, resetDemoData } = useAuth();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
@@ -74,7 +76,15 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
               {initial}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-bold text-sm text-text truncate">{firstName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-bold text-sm text-text truncate">{firstName}</p>
+                {isDemoMode && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 text-[10px] font-mono border border-amber-500/30">
+                    <Sparkles className="w-2.5 h-2.5" />
+                    Demo
+                  </span>
+                )}
+              </div>
               <p className="text-muted text-xs truncate font-mono">{user.email}</p>
             </div>
           </div>
@@ -115,6 +125,20 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
               <PlusCircle className="w-4 h-4 text-muted group-hover:text-text" />
               <span>Conectar Nuevo Banco</span>
             </Link>
+
+            {isDemoMode && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  resetDemoData();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-amber-500/10 text-amber-400 text-xs font-medium transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4 text-amber-400" />
+                <span>Restablecer datos de prueba</span>
+              </button>
+            )}
           </div>
 
           {/* AISP Security Badge */}
@@ -125,7 +149,7 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
             </div>
             <span className="inline-flex items-center gap-1 text-[10px] text-accent font-mono">
               <CheckCircle className="w-3 h-3" />
-              Active
+              {isDemoMode ? "Mock" : "Active"}
             </span>
           </div>
 
@@ -139,7 +163,7 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
               className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-negative/10 text-negative hover:text-negative text-xs font-medium transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
-              <span>Cerrar Sesión</span>
+              <span>{isDemoMode ? "Salir del Modo Demo" : "Cerrar Sesión"}</span>
             </button>
           </div>
         </div>
@@ -147,3 +171,4 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
     </div>
   );
 };
+

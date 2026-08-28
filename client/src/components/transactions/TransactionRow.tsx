@@ -160,11 +160,13 @@ export const TransactionRow: React.FC<TransactionRowProps> = ({
               </span>
             )}
 
-            {transaction.isTransfer && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-blue-300 bg-blue-500/10 border border-blue-500/20 shrink-0">
-                <span>⇆ Traspaso</span>
-              </span>
-            )}
+            {transaction.isTransfer &&
+              !transaction.category?.toLowerCase().includes("traspaso") &&
+              !transaction.category?.toLowerCase().includes("transfer") && (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono text-sky-300 bg-sky-500/10 border border-sky-500/20 shrink-0">
+                  <span>⇆ Traspaso</span>
+                </span>
+              )}
 
             <div
               className="relative inline-flex items-center"

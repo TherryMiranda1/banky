@@ -21,11 +21,11 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
         {[1, 2, 3].map((idx) => (
           <div
             key={idx}
-            className="rounded-2xl bg-surface border border-border/80 p-5 h-44 flex flex-col justify-between animate-pulse"
+            className="rounded-2xl bg-surface border border-border/80 p-5 h-48 flex flex-col justify-between animate-pulse"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -47,25 +47,26 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
       {accounts.map((account, index) => (
-        <AccountCard
-          key={account.id}
-          account={account}
-          onEdit={onEdit}
-          onToggleActive={onToggleActive}
-          onMove={onMoveAccount ? (dir) => onMoveAccount(index, dir) : undefined}
-          isFirst={index === 0}
-          isLast={index === accounts.length - 1}
-        />
+        <div key={account.id} className="h-full">
+          <AccountCard
+            account={account}
+            onEdit={onEdit}
+            onToggleActive={onToggleActive}
+            onMove={onMoveAccount ? (dir) => onMoveAccount(index, dir) : undefined}
+            isFirst={index === 0}
+            isLast={index === accounts.length - 1}
+          />
+        </div>
       ))}
 
       {/* Connect New Bank Action Card */}
       <Link
         to="/connect"
-        className="group rounded-2xl bg-surface/40 border border-dashed border-border/80 hover:border-accent/40 p-5 flex flex-col items-center justify-center text-center gap-2.5 min-h-[160px] transition-all duration-200 hover:bg-surface/80 cursor-pointer"
+        className="group rounded-2xl bg-surface/40 border border-dashed border-border/80 hover:border-accent/40 p-5 flex flex-col items-center justify-center text-center gap-2.5 h-full min-h-[170px] transition-all duration-200 hover:-translate-y-0.5 hover:bg-surface/80 cursor-pointer select-none"
       >
-        <div className="w-10 h-10 rounded-full bg-bg border border-border/80 group-hover:border-accent/40 group-hover:bg-accent/10 flex items-center justify-center text-muted group-hover:text-accent transition-colors">
+        <div className="w-10 h-10 rounded-full bg-bg border border-border/80 group-hover:border-accent/40 group-hover:bg-accent/10 flex items-center justify-center text-muted group-hover:text-accent transition-all duration-200 group-hover:scale-105">
           <Plus className="w-5 h-5" />
         </div>
         <div>

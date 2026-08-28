@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Building2 } from "lucide-react";
+import { getBankMetadata } from "@/lib/bank-utils";
 
 interface BankLogoProps {
   bankName: string;
@@ -15,12 +16,12 @@ export const BankLogo: React.FC<BankLogoProps> = ({
   size = "md"
 }) => {
   const [imgError, setImgError] = useState(false);
-  const normalized = (bankName || "").toLowerCase();
+  const metadata = getBankMetadata(bankName);
 
   const sizeClasses = {
     sm: "w-7 h-7 p-1 rounded-lg text-xs",
-    md: "w-9 h-9 p-1.5 rounded-xl text-sm",
-    lg: "w-11 h-11 p-2 rounded-xl text-base"
+    md: "w-10 h-10 p-1.5 rounded-xl text-sm",
+    lg: "w-12 h-12 p-2 rounded-2xl text-base"
   }[size];
 
   if (logoUrl && !imgError) {
@@ -40,7 +41,7 @@ export const BankLogo: React.FC<BankLogoProps> = ({
     );
   }
 
-  if (normalized.includes("efectivo") || normalized.includes("cash")) {
+  if (metadata.isCash) {
     return (
       <div
         className={`${sizeClasses} bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0 flex items-center justify-center ${className}`}
@@ -51,7 +52,7 @@ export const BankLogo: React.FC<BankLogoProps> = ({
     );
   }
 
-  if (normalized.includes("santander")) {
+  if (metadata.label === "Santander") {
     return (
       <div
         className={`${sizeClasses} bg-white shadow-sm border border-border/40 shrink-0 flex items-center justify-center ${className}`}
@@ -64,7 +65,7 @@ export const BankLogo: React.FC<BankLogoProps> = ({
     );
   }
 
-  if (normalized.includes("revolut")) {
+  if (metadata.label === "Revolut") {
     return (
       <div
         className={`${sizeClasses} bg-white shadow-sm border border-border/40 shrink-0 flex items-center justify-center font-black text-black font-sans ${className}`}
@@ -75,7 +76,7 @@ export const BankLogo: React.FC<BankLogoProps> = ({
     );
   }
 
-  if (normalized.includes("bbva")) {
+  if (metadata.label === "BBVA") {
     return (
       <div
         className={`${sizeClasses} bg-white shadow-sm border border-border/40 shrink-0 flex items-center justify-center font-black text-[#004481] font-sans ${className}`}
@@ -86,7 +87,7 @@ export const BankLogo: React.FC<BankLogoProps> = ({
     );
   }
 
-  if (normalized.includes("caixa") || normalized.includes("imagin")) {
+  if (metadata.label === "CaixaBank") {
     return (
       <div
         className={`${sizeClasses} bg-white shadow-sm border border-border/40 shrink-0 flex items-center justify-center font-black text-[#007eae] font-sans ${className}`}

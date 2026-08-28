@@ -92,6 +92,8 @@ function getCategoryStyle(category: string | null): { bg: string; text: string; 
 export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, color, className = "" }) => {
   if (!category) return null;
 
+  const isTransfer = category.toLowerCase().includes("transfer") || category.toLowerCase().includes("traspaso");
+
   if (color) {
     const isHex = color.startsWith("#");
     const bgStyle = isHex ? `${color}20` : undefined;
@@ -104,9 +106,10 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, color, c
           backgroundColor: bgStyle,
           borderColor: borderStyle
         }}
-        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${className}`}
+        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${className}`}
       >
-        {category}
+        {isTransfer && <span>⇆</span>}
+        <span>{category}</span>
       </span>
     );
   }
@@ -115,9 +118,10 @@ export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category, color, c
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${style.bg} ${style.text} ${style.border} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono tracking-tight border ${style.bg} ${style.text} ${style.border} ${className}`}
     >
-      {category}
+      {isTransfer && <span>⇆</span>}
+      <span>{category}</span>
     </span>
   );
 };

@@ -6,3 +6,4 @@
 *.db-wal
 dist/
 node_modules/
+wrangler.toml

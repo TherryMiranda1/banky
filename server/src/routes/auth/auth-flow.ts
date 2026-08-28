@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import crypto from "node:crypto";
-import { EnableBankingAdapter } from "../../core/infra/enable-banking/EnableBankingAdapter.js";
+import { getBankingAdapter } from "../../core/infra/adapterFactory.js";
 import { stateStore } from "../../services/state-store.js";
 import { encrypt } from "../../services/crypto.js";
 import { getDb, bankConnections, accounts } from "../../db/index.js";
@@ -32,8 +32,6 @@ const callbackBodySchema = z.object({
 });
 
 export const authFlowRouter = new Hono();
-const adapter = new EnableBankingAdapter();
-const syncService = new SyncService(adapter);
 
 async function handleCallbackCore(
   code: string | undefined,
@@ -54,10 +52,12 @@ async function handleCallbackCore(
     throw new BadRequestError("Missing authorization code in callback");
   }
 
+  const adapter = getBankingAdapter();
   const sessionData = await adapter.completeAuth(code);
   const sessionIdEnc = encrypt(sessionData.sessionId);
   const connectionId = crypto.randomUUID();
   const userId = stateData.userId || "default-user";
+
   const now = new Date().toISOString();
   const logoUrl =
     stateData.logoUrl ||
@@ -102,6 +102,7 @@ async function handleCallbackCore(
   }
 
   try {
+    const syncService = new SyncService(adapter);
     await syncService.syncAll(userId);
   } catch (syncErr) {
     console.error("Initial sync on callback finished with warning:", syncErr);
@@ -125,6 +126,7 @@ authFlowRouter.post("/start", requireAuth, zValidator("json", startAuthSchema), 
     logoUrl
   });
 
+  const adapter = getBankingAdapter();
   const result = await adapter.startAuth({
     name: aspspName,
     country: aspspCountry.toUpperCase(),
@@ -133,6 +135,7 @@ authFlowRouter.post("/start", requireAuth, zValidator("json", startAuthSchema), 
 
   return c.json({ url: result.url });
 });
+
 
 // JSON Callback endpoint for Frontend SPA
 authFlowRouter.post("/callback", zValidator("json", callbackBodySchema), async (c) => {

@@ -13,4 +13,5 @@ ENABLE_BANKING_BASE_URL = "https://api.enablebanking.com"
 [[d1_databases]]
 binding = "DB"
 database_name = "banky-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "786e564e-f05f-4af4-a9ce-e7ab3767658b"
+

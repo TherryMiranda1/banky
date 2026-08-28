@@ -1,3 +1,5 @@
+import { isMockModeActive, handleMockRequest, MOCK_TOKEN } from "../mock/mockInterceptor";
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
 export const TOKEN_STORAGE_KEY = "banky_auth_token";
@@ -15,8 +17,13 @@ export function setStoredToken(token: string | null): void {
 }
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
   const token = getStoredToken();
+
+  if (isMockModeActive() || token === MOCK_TOKEN) {
+    return handleMockRequest<T>(endpoint, options);
+  }
+
+  const url = `${API_BASE_URL}${endpoint}`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -50,3 +57,4 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
 
   return response.json() as Promise<T>;
 }
+

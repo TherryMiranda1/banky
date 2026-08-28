@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Wallet, PlusCircle, ShieldCheck, Tags, PieChart } from "lucide-react";
+import { LayoutDashboard, Wallet, PlusCircle, ShieldCheck, Tags, PieChart, Sparkles, RotateCcw } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { BottomNav } from "./BottomNav";
 import { CutoffSettingsModal } from "./CutoffSettingsModal";
@@ -12,7 +12,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isDemoMode, resetDemoData } = useAuth();
   const [isCutoffModalOpen, setIsCutoffModalOpen] = useState<boolean>(false);
 
   const navItems = [
@@ -96,6 +96,22 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               />
               <span className="font-bold text-base tracking-tight text-text">Banky</span>
             </Link>
+
+            {isDemoMode && (
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse shrink-0" />
+                <span className="font-semibold hidden xs:inline">Modo Demo</span>
+                <button
+                  type="button"
+                  onClick={resetDemoData}
+                  title="Restablecer datos de prueba a valores iniciales"
+                  className="inline-flex items-center gap-1 text-[11px] text-amber-300/80 hover:text-amber-200 underline cursor-pointer ml-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span className="hidden sm:inline">Restablecer</span>
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
@@ -104,6 +120,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
           </div>
         </header>
+
 
         {/* Content Container (with generous bottom padding for BottomNav on mobile) */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-32 sm:pb-36 lg:pb-8 overflow-y-auto">
