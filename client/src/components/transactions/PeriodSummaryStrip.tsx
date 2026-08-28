@@ -44,24 +44,24 @@ export const PeriodSummaryStrip: React.FC<PeriodSummaryStripProps> = ({
   const isNetPositive = netTotal >= 0;
 
   return (
-    <div className="flex items-center gap-4 sm:gap-6 px-3.5 py-2 rounded-md bg-surface/40 border border-border/70 text-xs font-mono">
-      <div className="flex items-center gap-1.5">
-        <span className="text-muted">Ingresos:</span>
-        <span className="text-income font-medium">+{formatCurrency(totalIncome, currency)}</span>
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-2.5 sm:px-3.5 sm:py-2 rounded-md bg-surface/40 border border-border/70 text-xs font-mono">
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-muted text-[11px] sm:text-xs">Ingresos:</span>
+        <span className="text-income font-medium truncate">+{formatCurrency(totalIncome, currency)}</span>
       </div>
 
-      <span className="text-border">|</span>
+      <span className="hidden sm:inline text-border">|</span>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-muted">Gastos:</span>
-        <span className="text-text font-medium">-{formatCurrency(totalExpense, currency)}</span>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-muted text-[11px] sm:text-xs">Gastos:</span>
+        <span className="text-text font-medium truncate">-{formatCurrency(totalExpense, currency)}</span>
       </div>
 
-      <span className="text-border">|</span>
+      <span className="hidden sm:inline text-border">|</span>
 
-      <div className="flex items-center gap-1.5">
-        <span className="text-muted">Neto:</span>
-        <span className={`font-semibold ${isNetPositive ? "text-income" : "text-expense"}`}>
+      <div className="flex items-center gap-1.5 min-w-0">
+        <span className="text-muted text-[11px] sm:text-xs">Neto:</span>
+        <span className={`font-semibold truncate ${isNetPositive ? "text-income" : "text-expense"}`}>
           {isNetPositive ? "+" : "-"}{formatCurrency(netTotal, currency)}
         </span>
       </div>

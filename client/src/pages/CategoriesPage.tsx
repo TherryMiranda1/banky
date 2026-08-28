@@ -22,6 +22,7 @@ import { getAccounts, Account } from "@/lib/api/accounts";
 import { CategoryBadge } from "@/components/transactions/CategoryBadge";
 import { CategoryModal, ICON_MAP } from "@/components/categories/CategoryModal";
 import { RuleModal } from "@/components/categories/RuleModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 export const CategoriesPage: React.FC = () => {
   const {
@@ -50,6 +51,14 @@ export const CategoriesPage: React.FC = () => {
   const [editingRule, setEditingRule] = useState<CategorizationRuleItem | null>(null);
   const [targetCategoryForRule, setTargetCategoryForRule] = useState<string | undefined>(undefined);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const [deleteConfirmState, setDeleteConfirmState] = useState<{
+    isOpen: boolean;
+    type: "category" | "rule";
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     getAccounts()
@@ -93,23 +102,21 @@ export const CategoriesPage: React.FC = () => {
     await handleReorderCategories(newIds);
   };
 
-  const onConfirmDeleteCategory = async (id: string, name: string) => {
-    if (window.confirm(`¿Eliminar la categoría "${name}"?`)) {
-      try {
-        setActionError(null);
-        await handleDeleteCategory(id);
-      } catch (err: unknown) {
-        setActionError(err instanceof Error ? err.message : "Error al eliminar categoría");
-      }
-    }
-  };
-
-  const onConfirmDeleteRule = async (id: string) => {
+  const handleExecuteDelete = async () => {
+    if (!deleteConfirmState) return;
     try {
+      setIsDeleting(true);
       setActionError(null);
-      await handleDeleteRule(id);
+      if (deleteConfirmState.type === "category") {
+        await handleDeleteCategory(deleteConfirmState.id);
+      } else {
+        await handleDeleteRule(deleteConfirmState.id);
+      }
+      setDeleteConfirmState(null);
     } catch (err: unknown) {
-      setActionError(err instanceof Error ? err.message : "Error al eliminar regla");
+      setActionError(err instanceof Error ? err.message : "Error al eliminar");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -225,11 +232,11 @@ export const CategoriesPage: React.FC = () => {
                 return (
                   <div
                     key={cat.id}
-                    className="p-2.5 px-3.5 hover:bg-surface-elevated/70 transition-colors flex items-center justify-between gap-3 group"
+                    className="p-2.5 px-3.5 hover:bg-surface-elevated/70 transition-colors flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      {/* Reorder Buttons */}
-                      <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      {/* Reorder Buttons (Always visible) */}
+                      <div className="flex flex-col shrink-0">
                         <button
                           type="button"
                           onClick={() => handleMoveCategory(index, "up")}
@@ -265,8 +272,8 @@ export const CategoriesPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    {/* Actions (Always accessible on touch & desktop) */}
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
                         type="button"
                         onClick={() => openCreateRule(cat.id)}
@@ -285,7 +292,14 @@ export const CategoriesPage: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => onConfirmDeleteCategory(cat.id, cat.name)}
+                        onClick={() =>
+                          setDeleteConfirmState({
+                            isOpen: true,
+                            type: "category",
+                            id: cat.id,
+                            name: cat.name
+                          })
+                        }
                         title="Eliminar categoría"
                         className="p-1 rounded text-muted hover:text-expense hover:bg-expense/10 transition-colors cursor-pointer"
                       >
@@ -321,7 +335,7 @@ export const CategoriesPage: React.FC = () => {
                 {rules.map((rule) => (
                   <div
                     key={rule.id}
-                    className="p-3 px-4 flex items-start justify-between gap-3 hover:bg-surface-elevated/70 transition-colors group"
+                    className="p-3 px-4 flex items-start justify-between gap-3 hover:bg-surface-elevated/70 transition-colors"
                   >
                     <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -364,7 +378,8 @@ export const CategoriesPage: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 pt-0.5">
+                    {/* Actions (Always accessible on touch & desktop) */}
+                    <div className="flex items-center gap-1 shrink-0 pt-0.5">
                       <button
                         type="button"
                         onClick={() => openEditRule(rule)}
@@ -375,7 +390,14 @@ export const CategoriesPage: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        onClick={() => onConfirmDeleteRule(rule.id)}
+                        onClick={() =>
+                          setDeleteConfirmState({
+                            isOpen: true,
+                            type: "rule",
+                            id: rule.id,
+                            name: rule.pattern || rule.categoryName
+                          })
+                        }
                         title="Eliminar regla"
                         className="p-1 rounded text-muted hover:text-expense hover:bg-expense/10 transition-colors cursor-pointer"
                       >
@@ -422,6 +444,27 @@ export const CategoriesPage: React.FC = () => {
             await handleCreateRule(data);
           }
         }}
+      />
+
+      {/* Destructive Action Confirm Modal */}
+      <ConfirmModal
+        isOpen={Boolean(deleteConfirmState?.isOpen)}
+        title={
+          deleteConfirmState?.type === "category"
+            ? `¿Eliminar categoría "${deleteConfirmState?.name}"?`
+            : `¿Eliminar regla de automatización?`
+        }
+        description={
+          deleteConfirmState?.type === "category"
+            ? "Esta acción eliminará la categoría. Los movimientos asociados pasarán a estado sin categoría."
+            : `Se eliminará la regla "${deleteConfirmState?.name}". Las transacciones ya categorizadas conservarán su categoría actual.`
+        }
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        isDestructive={true}
+        isLoading={isDeleting}
+        onConfirm={handleExecuteDelete}
+        onCancel={() => setDeleteConfirmState(null)}
       />
     </div>
   );

@@ -99,9 +99,9 @@ export const AccountCard: React.FC<AccountCardProps> = ({
           </span>
         </div>
 
-        {/* Quick Actions (revealed on hover) */}
+        {/* Quick Actions (Always accessible on touch & desktop) */}
         <div
-          className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="flex items-center gap-1 shrink-0"
           onClick={(e) => e.stopPropagation()}
         >
           {onMove && (
