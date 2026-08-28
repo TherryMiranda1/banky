@@ -9,7 +9,8 @@ Antes de cualquier trabajo, leer:
 2. `plans/` — Planes de trabajo e hitos completados (`plans/completed/`)
 3. `.agents/rules/backend.rules.md` — Principios del servidor
 4. `.agents/rules/frontend.rules.md` — Principios del cliente
-5. `.agents/skills/frontend-design/SKILL.md` — Guía de diseño visual intencional y distintivo
+5. `.agents/rules/design.rules.md` — Principios de diseño visual, UX y maquetación
+6. `.agents/skills/frontend-design/SKILL.md` — Guía de diseño visual intencional y distintivo
 
 ## Stack y Despliegue
 
