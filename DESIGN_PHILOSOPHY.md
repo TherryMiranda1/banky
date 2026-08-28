@@ -1,97 +1,90 @@
-# Filosofía de Diseño — Banky
+# Principios de Diseño de Interfaces (GitHub Primer & Linear)
 
-Banky adopta una filosofía de diseño utilitaria, densa y de alta precisión inspirada en los sistemas de **GitHub Primer** y **Linear**, adaptada a la gestión financiera personal y multi-banco.
-
----
-
-## 🎯 Principio Fundamental: Densidad, Legibilidad y Cero Fricción
-
-El objetivo de una herramienta financiera no es deslumbrar con animaciones innecesarias ni tarjetas decorativas ("card inception"), sino maximizar la **relación señal/ruido**:
-- **Menos chrome visual, más datos útiles.**
-- **Todo elemento interactivo debe ser evidente y táctil.**
-- **Cero estados ocultos exclusivos de ratón (hover).**
+Reglas y principios de diseño para construir interfaces web profesionales, densas, minimalistas y de alta usabilidad.
 
 ---
 
-## 🏛️ 1. Arquitectura de Layout y Viewport
+## 1. Document Canvas & Cero "Card Inception"
 
-| Componente | Patrón Antiguo | Enfoque Banky Primer |
-|---|---|---|
-| **Navegación Global** | Sidebar fija de 256px (resta 20% del viewport) | **Top Navigation unificada** con pestañas underline (`max-w-7xl`). |
-| **Scroll** | Contenedor `div` interno con `overflow-y-auto` | **Scroll nativo de ventana** a 60/120 FPS sin atrapar eventos. |
-| **Jerarquía** | Títulos aislados sin contexto de ruta | **Breadcrumbs dinámicos** (`Banky / Cuentas / Santander`) integrados en el header. |
-| **Búsqueda Global** | Inputs redundantes por página | **Command Palette** global invocable con `/` o `⌘K` / `Ctrl+K`. |
+- **El contenido respira en el canvas:** La página se estructura como un documento abierto. Prohibido envolver secciones dentro de múltiples tarjetas anidadas con sombras pesadas, degradados decorativos o resplandores (*glows*).
+- **Resource Box Pattern:** Cada sección de datos (tablas, feeds, listas de entidades) utiliza un único contenedor estructurado con borde plano de 1px (`border-border`), superficies neutras de bajo contraste (`bg-surface`) y filas separadas por divisores limpios (`divide-y divide-border`).
+- **Máxima relación señal/ruido:** Todo píxel debe aportar información o claridad estructural; eliminar cualquier adorno que no tenga una función directa.
 
 ---
 
-## 🔤 2. Tipografía y Cifras Financieras
+## 2. Top Navigation Unificada & Scroll Nativo
 
-1. **Jerarquía Dual de Fuentes:**
-   - **Inter (Sans-Serif):** Textos descriptivos, navegación, títulos y etiquetas de UI.
-   - **JetBrains Mono (Monospace):** Cifras monetarias, saldos, importes, IBANs, fechas y métricas.
-2. **Escaneo Numérico Inmediato:**
-   - Todo número monetario se alinea con precisión tabular y formato de dos decimales (`€4,875.70`).
-   - El símbolo monetario precede al importe con contraste visual intencionado.
+- **Aprovechamiento del ancho horizontal:** La navegación principal se organiza horizontalmente en el encabezado superior con pestañas tipo *underline* (`border-b-2`) y badges numéricos de conteo (`[ Todas 12 ] [ Activas 8 ]`).
+- **Sin sidebars fijas intrusivas:** Evitar barras laterales fijas de 256px que resten espacio útil a las tablas y datos.
+- **Scroll siempre nativo de ventana:** Prohibido atrapar el scroll principal dentro de `div` con `overflow-y-auto`. El scroll debe pertenecer a `window` para garantizar fluidez a 60/120 FPS y compatibilidad con atajos de teclado y sticky headers.
 
 ---
 
-## 🎨 3. Disciplina Cromática y Semántica
+## 3. Navegación Contextual con Breadcrumbs
 
-Evitar la saturación visual reservando el color estrictamente para comunicar estado financiero:
-
-```
-Superficies:
-  Canvas Principal:       #0d0d12  (bg)
-  Contenedores / Cajas:   #13131a  (surface)
-  Superficies Elevadas:   #1a1a24  (surface-elevated)
-  Bordes Estructurales:   #242432  (border - 1px plano)
-
-Semántica Financiera:
-  Ingresos / Positivo:    #00e5a0  (income)
-  Gastos / Salidas:       #ff4d6d  (expense - usado con moderación)
-  Traspasos entre cuentas:#60a5fa  (transfer)
-  Acentos / Selección:    #00e5a0  (accent)
-```
+- **Jerarquía siempre visible:** El header global debe incluir *breadcrumbs* dinámicos (`App / Sección / Recurso Activo`) para que el usuario conozca su ubicación exacta en el árbol de la aplicación sin consumir espacio vertical redundante.
 
 ---
 
-## 🚫 4. Anti-Patrones Prohibidos
+## 4. Tipografía Dual Estricta y Escaneo Numérico
 
-### ❌ 1. Card Inception (Tarjetas Anidadas con Glows)
-- **Prohibido:** Envolver tarjetas dentro de tarjetas con sombras intensas y bordes brillantes.
-- **Correcto:** Una única **Caja de Recursos (Resource Box)** con borde de 1px por sección y filas divididas por `divide-y`.
-
-### ❌ 2. Acciones Ocultas tras Hover
-- **Prohibido:** Botones de eliminar, reordenar o editar con `opacity-0 group-hover:opacity-100`. En móviles y pantallas táctiles el hover no existe y la funcionalidad queda inaccesible.
-- **Correcto:** Botones de acción siempre visibles, compactos y con contraste atenuado (`text-muted hover:text-text`).
-
-### ❌ 3. Diálogos Nativos (`window.confirm`)
-- **Prohibido:** Interrumpir el flujo con cuadros de alerta nativos del navegador.
-- **Correcto:** Modal de confirmación destructivo (`ConfirmModal`) con explicación del impacto y botón de confirmación en rojo (`bg-expense`).
-
-### ❌ 4. Desbordamiento Horizontal en Mobile
-- **Prohibido:** Franjas de métricas rígidas en una sola línea que rompen el ancho de pantalla en smartphones (< 400px).
-- **Correcto:** Uso de `flex-wrap`, `justify-between`, `gap-x-4 gap-y-2` y separadores condicionales (`hidden sm:inline`).
+- **Texto de interfaz vs Datos numéricos:**
+  - **Sans-Serif (ej. Inter):** Utilizada exclusivamente para textos de UI, navegación, etiquetas, títulos y descripciones.
+  - **Monospace (ej. JetBrains Mono):** Obligatoria para toda cifra numérica, monedas, importes, identificadores (IDs, hashes, IBANs), fechas, contadores y métricas tabulares.
+- **Alineación numérica a la derecha:** En listas y tablas, las cifras y métricas se alinean a la derecha con formato tabular y número fijo de decimales para facilitar la comparación vertical visual instantánea.
 
 ---
 
-## 🧩 5. Anatomía de Componentes Estándar
+## 5. Disciplina Cromática Semántica (Bajo Ruido Visual)
 
-### A. Resource Box (Tablas / Feeds)
-- Header con título de sección, contador numérico y barra de acciones secundarias.
-- Filas densas con altura fija o compacta, identificador de banco/categoría a la izquierda, importe en `JetBrains Mono` a la derecha.
-
-### B. Inline Metric Strips
-- Reemplazo de los widgets gigantes de métricas por tiras de datos horizontales:
-  `Ingresos: +€3,200.00 | Gastos: -€1,450.20 | Neto: +€1,749.80`
-
-### C. Sticky Shrinking Context
-- En vistas de feed extenso, un header sutil fijado en scroll superior mantiene visible el saldo y cuenta activa sin obstruir la lectura.
+- **Superficies neutras:** Uso de paletas oscuras o claras calibradas (canvas principal, superficie de caja, superficie elevada de hover) con bordes de 1px de contraste controlado.
+- **Color reservado solo para significado:**
+  - **Verde / Éxito:** Entradas, incrementos, estados positivos y confirmaciones.
+  - **Rojo / Alerta:** Errores, salidas críticas y acciones destructivas (usado con moderación; evitar fatiga de rojo en listas densas).
+  - **Azul / Neutro:** Enlaces y transferencias/movimientos informativos.
+  - **Acento:** Focos interactivos, pestañas activas y selecciones principales.
+- **Cero degradados decorativos:** Prohibido el uso de gradientes multicolores o saturación cromática arbitraria.
 
 ---
 
-## 📱 6. Regla Mobile-First para Pantallas Táctiles
+## 6. Cero Acciones Ocultas tras Hover (Touch-First)
 
-1. Todo botón interactivo debe tener un área mínima de toque accesible (mínimo `32x32px` táctil).
-2. Las acciones secundarias se agrupan en toolbars compactas o popovers flotantes con soporte de clic exterior.
-3. Pestañas inferiores fijadas (`BottomNav`) para cambio instantáneo de dominio en smartphones.
+- **Prohibido `group-hover:opacity-100` para controles clave:** En dispositivos móviles y pantallas táctiles el hover no existe. Ocultar botones de eliminar, reordenar, editar o configurar tras hover destruye la accesibilidad.
+- **Visibilidad permanente y contraste atenuado:** Todo control interactivo debe ser visible por defecto con contraste sutil (`text-muted hover:text-text`) y un área táctil mínima de 32x32px.
+
+---
+
+## 7. Adaptabilidad Mobile: Bottom Sheets vs Popovers
+
+- **Desktop (≥ sm):** Los menús de selección y filtros se abren como popovers flotantes anclados al botón disparador.
+- **Mobile (< sm):** Todo selector o dropdown complejo debe transformarse automáticamente en un **Modal / Bottom Sheet** fijado al fondo de la pantalla con fondo oscurecido (`backdrop-blur`), buscador táctil y filas de altura cómoda (`40px+`).
+
+---
+
+## 8. Modales de Confirmación para Acciones Destructivas
+
+- **Prohibido `window.confirm()`:** Nunca usar alertas nativas y bloqueantes del navegador.
+- **ConfirmModal estandarizado:** Toda acción irreversible (eliminar registros, desvincular recursos, resetear configuraciones) debe invocar un diálogo modal con explicación explícita de las consecuencias y botón de acción de peligro (`bg-expense`).
+
+---
+
+## 9. Inline Metric Strips Responsivas
+
+- **Métricas en franjas horizontales compactas:** Reemplazar widgets gigantes y cajas redundantes por tiras de texto métricas compactas (`Métrica A: 120 | Métrica B: 45 | Total: 165`).
+- **Respeto del ancho en smartphones (< 400px):** Toda tira métrica debe implementar `flex-wrap`, `justify-between`, `gap-x-4 gap-y-2` y ocultar separadores verticales en móvil (`hidden sm:inline`) para prevenir desbordamientos horizontales.
+
+---
+
+## 10. Command Palette & Accesibilidad por Teclado
+
+- **Navegación sin ratón:** La interfaz debe ser completamente navegable por teclado.
+- **Atajos globales estándar:**
+  - `/` o `Cmd+K` / `Ctrl+K`: Abre la Command Palette global para saltar a cualquier sección, entidad o acción rápida.
+  - `Escape`: Cierra modales, popovers o limpia búsquedas activas.
+  - `↑` / `↓` + `Enter`: Navega y selecciona elementos en listas de búsqueda y menús.
+
+---
+
+## 11. Sticky Context Inteligente
+
+- **Contexto visible en scroll largo:** En vistas con feeds o tablas extensas, fijar un header compacto sutil al scroll superior que conserve el resumen principal y las acciones clave sin tapar ni sobreponerse al contenido interactivo.
