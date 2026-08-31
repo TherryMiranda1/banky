@@ -65,6 +65,39 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     ]
   },
   {
+    name: "Suscripciones",
+    color: "#8b5cf6",
+    icon: "CreditCard",
+    rules: [
+      {
+        pattern: "netflix|spotify|hbo|disney|prime|youtube premium|apple|adobe|microsoft 365|chatgpt|openai|notion|dropbox|icloud|steam",
+        priority: 15
+      }
+    ]
+  },
+  {
+    name: "Imprevistos",
+    color: "#f97316",
+    icon: "ShieldAlert",
+    rules: [
+      {
+        pattern: "farmacia|medico|hospital|reparacion|fontanero|electricista|veterinario|clinica|urgencias",
+        priority: 10
+      }
+    ]
+  },
+  {
+    name: "Ahorro",
+    color: "#22c55e",
+    icon: "PiggyBank",
+    rules: [
+      {
+        pattern: "ahorro|deposito|fondo|inversion|myinvestor|indexa|degiro|trade republic|cuenta ahorro",
+        priority: 10
+      }
+    ]
+  },
+  {
     name: "Nómina",
     color: "#00E5A0",
     icon: "Briefcase",

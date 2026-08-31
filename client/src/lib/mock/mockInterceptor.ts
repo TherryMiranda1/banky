@@ -200,5 +200,11 @@ export async function handleMockRequest<T>(
     return mockStorage.getCategoryAnalytics(period) as T;
   }
 
+  // Kingdom Gamification
+  if (path === "/kingdom") {
+    const period = searchParams.get("period") || "";
+    return mockStorage.getKingdomState(period) as T;
+  }
+
   throw new Error(`Mock handler for ${method} ${path} not implemented`);
 }

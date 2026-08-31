@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useDashboardView } from "@/hooks/useDashboardView";
 import { useAuth } from "@/context/AuthContext";
 import { getCurrentPeriod, formatCyclePeriod } from "@/lib/cycle-utils";
 import { TotalBalance } from "@/components/balance/TotalBalance";
 import { AccountGrid } from "@/components/accounts/AccountGrid";
 import { EditAccountModal } from "@/components/accounts/EditAccountModal";
 import { CashTransactionModal } from "@/components/transactions/CashTransactionModal";
+import { RealmView } from "@/components/realm/RealmView";
 import { Account, updateAccount, ensureCashAccount } from "@/lib/api/accounts";
-import { Plus, Landmark, AlertCircle, RefreshCw, Calendar, Wallet } from "lucide-react";
+import { Plus, Landmark, AlertCircle, RefreshCw, Calendar, Wallet, Castle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const Dashboard: React.FC = () => {
@@ -27,6 +29,8 @@ export const Dashboard: React.FC = () => {
     syncAll,
     handleReorderAccounts
   } = useDashboardData();
+
+  const { view, setView } = useDashboardView();
 
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [isCashModalOpen, setIsCashModalOpen] = useState<boolean>(false);
@@ -155,26 +159,64 @@ export const Dashboard: React.FC = () => {
         isInitializingCash={isInitializingCash}
       />
 
-      {/* Financial Cycle Inline Status Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 rounded-md bg-surface/40 border border-border text-xs font-mono text-muted">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-3.5 h-3.5 text-accent" />
-          <span className="text-text font-medium">Ciclo {cycleInfo.label}:</span>
-          <span>{cycleInfo.rangeLabel}</span>
+      {/* Dashboard View Switcher & Financial Cycle Inline Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <div className="inline-flex items-center p-0.5 rounded-lg bg-surface border border-border">
+          <button
+            type="button"
+            onClick={() => setView("accounts")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer min-h-[32px] ${
+              view === "accounts"
+                ? "bg-surface-elevated text-accent font-semibold shadow-xs border border-border/80"
+                : "text-muted hover:text-text"
+            }`}
+          >
+            <Landmark className="w-3.5 h-3.5" />
+            <span>Cuentas</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("realm")}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer min-h-[32px] ${
+              view === "realm"
+                ? "bg-surface-elevated text-accent font-semibold shadow-xs border border-border/80"
+                : "text-muted hover:text-text"
+            }`}
+          >
+            <Castle className="w-3.5 h-3.5" />
+            <span>Reino</span>
+          </button>
         </div>
-        <span className="text-[11px]">
-          {cutoffDay > 1 ? `Corte día ${cutoffDay}` : "Mes natural"}
-        </span>
+
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-surface/40 border border-border text-xs font-mono text-muted">
+          <Calendar className="w-3.5 h-3.5 text-accent" />
+          <span className="text-text font-medium hidden sm:inline">Ciclo {cycleInfo.label}:</span>
+          <span>{cycleInfo.rangeLabel}</span>
+          <span className="text-[11px] hidden md:inline text-muted/80">
+            • {cutoffDay > 1 ? `Corte día ${cutoffDay}` : "Mes natural"}
+          </span>
+        </div>
       </div>
 
-      {/* GitHub Primer Accounts Box */}
-      <AccountGrid
-        accounts={accounts}
-        isLoading={false}
-        onEdit={(acc) => setEditingAccount(acc)}
-        onToggleActive={handleToggleActive}
-        onMoveAccount={handleMoveAccount}
-      />
+      {/* Main View Content */}
+      {view === "accounts" ? (
+        <AccountGrid
+          accounts={accounts}
+          isLoading={false}
+          onEdit={(acc) => setEditingAccount(acc)}
+          onToggleActive={handleToggleActive}
+          onMoveAccount={handleMoveAccount}
+        />
+      ) : (
+        <RealmView
+          period={currentPeriod}
+          activeAccountsCount={accounts.filter((a) => a.isActive).length}
+          totalAccountsCount={accounts.length}
+          onOpenCashModal={handleOpenCashModal}
+          onSync={syncAll}
+          isSyncing={isSyncing}
+        />
+      )}
 
       {/* Modals */}
       <EditAccountModal

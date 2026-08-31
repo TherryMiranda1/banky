@@ -10,6 +10,7 @@ import { balanceRouter } from "./routes/balance/index.js";
 import { transactionsRouter } from "./routes/transactions/index.js";
 import { categoriesRouter } from "./routes/categories/index.js";
 import { budgetsRouter, analyticsRouter } from "./routes/budgets/index.js";
+import { kingdomRouter } from "./routes/kingdom/index.js";
 import { usersRouter } from "./routes/users/index.js";
 import { generateEnableBankingJwt } from "./services/jwt.js";
 
@@ -60,6 +61,7 @@ app.route("/transactions", transactionsRouter);
 app.route("/categories", categoriesRouter);
 app.route("/budgets", budgetsRouter);
 app.route("/analytics", analyticsRouter);
+app.route("/kingdom", kingdomRouter);
 app.route("/users", usersRouter);
 
 app.onError((err, c) => {

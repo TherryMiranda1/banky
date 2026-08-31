@@ -198,6 +198,24 @@ export const MOCK_CATEGORIES: CategoryItem[] = [
     icon: "HeartPulse",
     position: 7,
     createdAt: "2025-01-01T00:00:00Z"
+  },
+  {
+    id: "cat-unexpected",
+    userId: "mock-user-1",
+    name: "Imprevistos & Urgencias",
+    color: "#F97316",
+    icon: "ShieldAlert",
+    position: 8,
+    createdAt: "2025-01-01T00:00:00Z"
+  },
+  {
+    id: "cat-savings",
+    userId: "mock-user-1",
+    name: "Ahorro & Inversión",
+    color: "#22C55E",
+    icon: "PiggyBank",
+    position: 9,
+    createdAt: "2025-01-01T00:00:00Z"
   }
 ];
 
@@ -248,6 +266,30 @@ export const MOCK_RULES: CategorizationRuleItem[] = [
     pattern: "NETFLIX",
     direction: "out",
     priority: 7,
+    createdAt: "2025-01-01T00:00:00Z"
+  },
+  {
+    id: "rule-5",
+    userId: "mock-user-1",
+    categoryId: "cat-unexpected",
+    categoryName: "Imprevistos & Urgencias",
+    categoryColor: "#F97316",
+    categoryIcon: "ShieldAlert",
+    pattern: "FARMACIA",
+    direction: "out",
+    priority: 8,
+    createdAt: "2025-01-01T00:00:00Z"
+  },
+  {
+    id: "rule-6",
+    userId: "mock-user-1",
+    categoryId: "cat-savings",
+    categoryName: "Ahorro & Inversión",
+    categoryColor: "#22C55E",
+    categoryIcon: "PiggyBank",
+    pattern: "MYINVESTOR",
+    direction: "out",
+    priority: 9,
     createdAt: "2025-01-01T00:00:00Z"
   }
 ];
@@ -377,6 +419,24 @@ export const MOCK_BUDGETS: BudgetItem[] = [
     categoryColor: "#EF4444",
     categoryIcon: "HeartPulse",
     amount: "80",
+    isInherited: false
+  },
+  {
+    id: "bgt-unexpected",
+    categoryId: "cat-unexpected",
+    categoryName: "Imprevistos & Urgencias",
+    categoryColor: "#F97316",
+    categoryIcon: "ShieldAlert",
+    amount: "150",
+    isInherited: false
+  },
+  {
+    id: "bgt-savings",
+    categoryId: "cat-savings",
+    categoryName: "Ahorro & Inversión",
+    categoryColor: "#22C55E",
+    categoryIcon: "PiggyBank",
+    amount: "400",
     isInherited: false
   }
 ];

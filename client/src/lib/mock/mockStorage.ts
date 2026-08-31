@@ -15,6 +15,14 @@ import {
 } from "@/lib/api/transactions";
 import { CategoryItem, CategorizationRuleItem } from "@/lib/api/categories";
 import { BudgetItem, CategoryAnalyticsResponse } from "@/lib/api/budgets";
+import {
+  KingdomState,
+  Building,
+  BuildingType,
+  BuildingStatus,
+  KingdomHealth,
+  KingdomEvent
+} from "@/lib/api/kingdom";
 import { User, Aspsp } from "@/lib/api/auth";
 
 const MOCK_STORAGE_KEY = "banky_mock_database_v1";
@@ -545,6 +553,94 @@ class MockStorageManager {
         savingsRate,
         totalBudgeted
       }
+    };
+  }
+
+  public getKingdomState(period: string): KingdomState {
+    const analytics = this.getCategoryAnalytics(period);
+    const totals = this.getTotalBalance();
+    const totalBalanceEur = parseFloat(totals["EUR"] || "4875.70");
+
+    const buildings: Building[] = analytics.categories.map((cat) => {
+      let type: BuildingType = "house";
+      const name = cat.categoryName.toLowerCase();
+      if (name.includes("vivienda") || name.includes("alquiler")) type = "house";
+      else if (name.includes("alimentaci") || name.includes("super")) type = "granary";
+      else if (name.includes("restaurante") || name.includes("caf")) type = "tavern";
+      else if (name.includes("transporte") || name.includes("coche")) type = "stable";
+      else if (name.includes("suscrip") || name.includes("ocio")) type = "library";
+      else if (name.includes("compra") || name.includes("ropa")) type = "windmill";
+      else if (name.includes("imprevisto") || name.includes("salud") || name.includes("cuidado")) type = "watchtower";
+      else if (name.includes("ahorro") || name.includes("invers")) type = "vault";
+      else if (name.includes("nomina") || name.includes("ingreso")) type = "market";
+
+      const level: 1 | 2 | 3 = cat.spentAmount >= 600 ? 3 : cat.spentAmount >= 150 ? 2 : 1;
+      const status: BuildingStatus =
+        cat.budgetAmount > 0 && cat.spentPercentage > 100
+          ? "burning"
+          : cat.budgetAmount === 0 && cat.spentAmount > 0
+          ? "ruined"
+          : "healthy";
+
+      return {
+        id: cat.categoryId,
+        type,
+        level,
+        status,
+        categoryName: cat.categoryName,
+        categoryColor: cat.categoryColor,
+        categoryIcon: cat.categoryIcon,
+        spentAmount: cat.spentAmount,
+        budgetAmount: cat.budgetAmount,
+        spentPercentage: cat.spentPercentage
+      };
+    });
+
+    const burningCount = buildings.filter((b) => b.status === "burning").length;
+    let health: KingdomHealth = "stable";
+    if (burningCount >= 3 || analytics.summary.netSavings <= -1000) {
+      health = "crisis";
+    } else if (burningCount >= 1 || analytics.summary.savingsRate < 0 || analytics.summary.netSavings < 0) {
+      health = "struggling";
+    } else if (analytics.summary.savingsRate >= 25 && analytics.summary.netSavings > 0) {
+      health = "thriving";
+    }
+
+    const events: KingdomEvent[] = [];
+    buildings.forEach((b) => {
+      if (b.status === "burning") {
+        events.push({
+          kind: "fire",
+          categoryName: b.categoryName,
+          severity: b.spentPercentage >= 150 ? "high" : "low"
+        });
+      }
+    });
+
+    if (analytics.summary.totalIncome > 0) {
+      events.push({
+        kind: "caravan",
+        count: Math.min(5, Math.max(1, Math.floor(analytics.summary.totalIncome / 500)))
+      });
+    }
+
+    const treasuryLevel: 1 | 2 | 3 =
+      totalBalanceEur >= 5000 && analytics.summary.netSavings >= 0 ? 3 : totalBalanceEur >= 1000 ? 2 : 1;
+
+    return {
+      period: analytics.period,
+      health,
+      summary: {
+        totalIncome: analytics.summary.totalIncome,
+        totalSpent: analytics.summary.totalSpent,
+        netSavings: analytics.summary.netSavings,
+        savingsRate: analytics.summary.savingsRate,
+        totalBudgeted: analytics.summary.totalBudgeted,
+        totalBalanceEur
+      },
+      treasuryLevel,
+      buildings,
+      events
     };
   }
 }
