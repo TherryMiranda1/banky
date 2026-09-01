@@ -6,6 +6,7 @@ import { createBuildingCallout } from "./phaser-callouts";
 import { RealmCameraController } from "./phaser-controls";
 import { ensureProceduralTextures, applyBuildingStatusEffect } from "./phaser-textures";
 import { SCENE_KEY, REALM_ASSET_KEYS } from "./phaser-assets";
+import { ResourceFlowManager, type ResourceTarget, createSovereignCharacter } from "./phaser-effects";
 
 export { SCENE_KEY };
 export type RealmAvatar = "prince" | "princess";
@@ -17,6 +18,7 @@ export class PhaserRealmScene extends Phaser.Scene {
   private onSelectCellCallback: ((cell: PlacedCell) => void) | null = null;
   private avatar: RealmAvatar = "prince";
   private cameraController: RealmCameraController | null = null;
+  private resourceFlowManager: ResourceFlowManager | null = null;
 
   private groundImages: Phaser.GameObjects.Image[] = [];
   private buildingSprites = new Map<string, Phaser.GameObjects.Image>();
@@ -45,6 +47,7 @@ export class PhaserRealmScene extends Phaser.Scene {
     ensureProceduralTextures(this);
     this.recalculateDimensions();
     this.cameraController = new RealmCameraController(this);
+    this.resourceFlowManager = new ResourceFlowManager(this);
     this.rebuildGrid();
   }
 
@@ -146,6 +149,9 @@ export class PhaserRealmScene extends Phaser.Scene {
     const originY = height / 2 - (centerCol + centerRow) * halfH;
 
     const cells = generateKingdomLayout(this.kingdomState);
+    const buildingTargets: ResourceTarget[] = [];
+    let treasuryX = originX;
+    let treasuryY = originY + (centerCol + centerRow) * halfH;
 
     for (const cell of cells) {
       const sx = originX + (cell.col - cell.row) * halfW;
@@ -175,6 +181,18 @@ export class PhaserRealmScene extends Phaser.Scene {
         const spriteKey = cell.type === "treasury" ? TREASURY_KEY : getSpriteKey(cell.building);
         const buildingW = Math.round(this.baseTileWidth * 1.5);
         const buildingH = Math.round(this.baseTileHeight * 1.5);
+
+        if (cell.type === "treasury") {
+          treasuryX = sx;
+          treasuryY = sy;
+        } else if (cell.building) {
+          buildingTargets.push({
+            x: sx,
+            y: sy,
+            spentAmount: cell.building.spentAmount,
+            depth
+          });
+        }
 
         const sprite = this.add.image(sx, sy, spriteKey);
         sprite.setDisplaySize(buildingW, buildingH);
@@ -214,10 +232,26 @@ export class PhaserRealmScene extends Phaser.Scene {
       }
     }
 
-    this.spawnSovereignCharacter(originX, originY, halfW, halfH);
+    const { sprite, shadow, tween } = createSovereignCharacter(
+      this,
+      originX,
+      originY,
+      halfW,
+      halfH,
+      this.baseTileWidth,
+      this.baseTileHeight,
+      this.avatar
+    );
+    this.characterSprite = sprite;
+    this.characterShadow = shadow;
+    this.characterTween = tween;
+
+    this.resourceFlowManager?.startFlow(treasuryX, treasuryY, buildingTargets);
   }
 
   private cleanupGameObjects(): void {
+    this.resourceFlowManager?.stopFlow();
+
     for (const img of this.groundImages) img.destroy();
     this.groundImages = [];
 
@@ -237,39 +271,6 @@ export class PhaserRealmScene extends Phaser.Scene {
     this.characterShadow = null;
     this.characterSprite?.destroy();
     this.characterSprite = null;
-  }
-
-  private spawnSovereignCharacter(originX: number, originY: number, halfW: number, halfH: number): void {
-    const col = 9;
-    const row = 10;
-    const charSx = originX + (col - row) * halfW;
-    const charSy = originY + (col + row) * halfH;
-    const textureKey = this.avatar === "princess" ? "princess_character" : "prince_character";
-
-    const shadow = this.add.ellipse(
-      charSx,
-      charSy + 4,
-      Math.floor(this.baseTileWidth * 0.35),
-      Math.floor(this.baseTileHeight * 0.4),
-      0x000000,
-      0.35
-    );
-    shadow.setDepth(col + row + 1.2);
-    this.characterShadow = shadow;
-
-    const sprite = this.add.image(charSx, charSy - 2, textureKey);
-    sprite.setDisplaySize(Math.floor(this.baseTileWidth * 0.45), Math.floor(this.baseTileHeight * 0.95));
-    sprite.setDepth(col + row + 1.5);
-
-    this.characterSprite = sprite;
-    this.characterTween = this.tweens.add({
-      targets: sprite,
-      y: charSy - 5,
-      duration: 1000,
-      ease: "Sine.easeInOut",
-      yoyo: true,
-      repeat: -1
-    });
   }
 
   public getCellAt(clientX: number, clientY: number): PlacedCell | null {
