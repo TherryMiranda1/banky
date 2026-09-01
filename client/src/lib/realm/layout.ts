@@ -1,48 +1,95 @@
 import type { Building, KingdomState } from "../api/kingdom.js";
 
-export const GRID_SIZE = 7;
-export const CENTER_COORD = { col: 3, row: 3 };
+export const GRID_SIZE = 21;
+export const CENTER_COORD = { col: 10, row: 10 };
 
-export type CellType = "ground" | "road" | "plaza" | "treasury" | "building";
-export type DecorationType = "pine" | "autumn_oak" | "chest" | "fence_n" | "fence_w" | "fence_corner";
+export type CellType = "ground" | "tree" | "rock" | "water" | "road" | "plaza" | "treasury" | "building";
 
 export interface PlacedCell {
   col: number;
   row: number;
   type: CellType;
   building?: Building;
-  decoration?: DecorationType;
   isAltGround?: boolean;
   isPerimeter?: boolean;
 }
 
 export const AVAILABLE_BUILDING_SLOTS: Array<{ col: number; row: number }> = [
-  { col: 1, row: 1 },
-  { col: 5, row: 1 },
-  { col: 1, row: 5 },
-  { col: 5, row: 5 },
-  { col: 0, row: 2 },
-  { col: 2, row: 0 },
-  { col: 4, row: 0 },
-  { col: 6, row: 2 },
-  { col: 0, row: 4 },
-  { col: 2, row: 6 },
-  { col: 4, row: 6 },
-  { col: 6, row: 4 }
+  // Anillo Interior (Centro del Reino)
+  { col: 8, row: 8 },
+  { col: 12, row: 8 },
+  { col: 8, row: 12 },
+  { col: 12, row: 12 },
+  { col: 10, row: 7 },
+  { col: 7, row: 10 },
+  { col: 13, row: 10 },
+  { col: 10, row: 13 },
+  // Anillo Exterior (Comarcas y Aldeas)
+  { col: 5, row: 7 },
+  { col: 15, row: 7 },
+  { col: 5, row: 13 },
+  { col: 15, row: 13 },
+  { col: 7, row: 4 },
+  { col: 13, row: 4 },
+  { col: 7, row: 16 },
+  { col: 13, row: 16 }
 ];
 
 export function isPlazaCell(col: number, row: number): boolean {
-  if (col === 3 && row === 3) return true;
-  if (col === 3 && (row === 2 || row === 4)) return true;
-  if (row === 3 && (col === 2 || col === 4)) return true;
+  if (col === 10 && row === 10) return true;
+  if (col === 10 && (row === 9 || row === 11)) return true;
+  if (row === 10 && (col === 9 || col === 11)) return true;
+  if ((col === 9 && row === 9) || (col === 11 && row === 9)) return true;
+  if ((col === 9 && row === 11) || (col === 11 && row === 11)) return true;
   return false;
 }
 
 export function isRoadCell(col: number, row: number): boolean {
-  if (col === 3 && (row === 0 || row === 1 || row === 5 || row === 6)) return true;
-  if (row === 3 && (col === 0 || col === 1 || col === 5 || col === 6)) return true;
-  if ((col === 2 && row === 2) || (col === 4 && row === 2)) return true;
-  if ((col === 2 && row === 4) || (col === 4 && row === 4)) return true;
+  if (col === 10 && row >= 3 && row <= 17) return true;
+  if (row === 10 && col >= 3 && col <= 17) return true;
+  if (row === 8 && col >= 8 && col <= 12) return true;
+  if (row === 12 && col >= 8 && col <= 12) return true;
+  return false;
+}
+
+export function isTreeCell(col: number, row: number): boolean {
+  // Esquinas boscosas exteriores
+  if (col <= 1 && row <= 2) return true;
+  if (col >= 19 && row <= 2) return true;
+  if (col <= 1 && row >= 18) return true;
+  if (col >= 19 && row >= 18) return true;
+
+  // Bosquecillos en cuadrantes intermedios
+  if ((col === 3 && row === 4) || (col === 4 && row === 3)) return true;
+  if ((col === 17 && row === 4) || (col === 16 && row === 3)) return true;
+  if ((col === 3 && row === 16) || (col === 4 && row === 17)) return true;
+  if ((col === 17 && row === 16) || (col === 16 && row === 17)) return true;
+
+  if (row === 0 && col % 2 === 0) return true;
+  if (row === 20 && col % 2 === 0) return true;
+  return false;
+}
+
+export function isRockCell(col: number, row: number): boolean {
+  // Afloramientos rocosos y canteras estratégicas
+  if ((col === 6 && row === 2) || (col === 14 && row === 2)) return true;
+  if ((col === 2 && row === 6) || (col === 18 && row === 6)) return true;
+  if ((col === 6 && row === 18) || (col === 14 && row === 18)) return true;
+  if ((col === 2 && row === 14) || (col === 18 && row === 14)) return true;
+  if (col === 0 && (row === 8 || row === 12)) return true;
+  if (col === 20 && (row === 8 || row === 12)) return true;
+  return false;
+}
+
+export function isWaterCell(col: number, row: number): boolean {
+  // Río / Lago serpenteante en sector occidental
+  if ((col === 4 && row === 6) || (col === 4 && row === 7)) return true;
+  if ((col === 5 && row === 7) || (col === 5 && row === 8)) return true;
+  if ((col === 6 && row === 8) || (col === 6 && row === 9)) return true;
+
+  // Estanque en sector oriental
+  if ((col === 16 && row === 13) || (col === 16 && row === 14)) return true;
+  if ((col === 15 && row === 14) || (col === 15 && row === 15)) return true;
   return false;
 }
 
@@ -63,7 +110,7 @@ export function generateKingdomLayout(state: KingdomState): PlacedCell[] {
     for (let col = 0; col < GRID_SIZE; col++) {
       const key = `${col},${row}`;
       const isCenter = col === CENTER_COORD.col && row === CENTER_COORD.row;
-      const isPerimeter = col === 0 || col === 6 || row === 0 || row === 6;
+      const isPerimeter = col <= 1 || col >= 19 || row <= 1 || row >= 19;
       const building = buildingMap.get(key);
 
       if (isCenter) {
@@ -74,16 +121,18 @@ export function generateKingdomLayout(state: KingdomState): PlacedCell[] {
         cells.push({ col, row, type: "plaza", isPerimeter });
       } else if (isRoadCell(col, row)) {
         cells.push({ col, row, type: "road", isPerimeter });
+      } else if (isWaterCell(col, row)) {
+        cells.push({ col, row, type: "water", isPerimeter });
+      } else if (isTreeCell(col, row)) {
+        cells.push({ col, row, type: "tree", isPerimeter });
+      } else if (isRockCell(col, row)) {
+        cells.push({ col, row, type: "rock", isPerimeter });
       } else {
-        const isAlt = (col + row) % 2 === 0;
-        const decoration = resolveGroundDecoration(col, row);
         cells.push({
           col,
           row,
           type: "ground",
-          isAltGround: isAlt,
-          isPerimeter,
-          decoration
+          isPerimeter
         });
       }
     }
@@ -97,29 +146,4 @@ export function generateKingdomLayout(state: KingdomState): PlacedCell[] {
   });
 
   return cells;
-}
-
-function resolveGroundDecoration(col: number, row: number): DecorationType | undefined {
-  if (col === 0 && row === 0) return "pine";
-  if (col === 6 && row === 0) return "pine";
-  if (col === 0 && row === 6) return "pine";
-  if (col === 6 && row === 6) return "pine";
-
-  if (col === 1 && row === 0) return "pine";
-  if (col === 5 && row === 0) return "pine";
-  if (col === 1 && row === 6) return "pine";
-  if (col === 5 && row === 6) return "pine";
-
-  if (col === 0 && row === 1) return "autumn_oak";
-  if (col === 6 && row === 1) return "autumn_oak";
-  if (col === 0 && row === 5) return "autumn_oak";
-  if (col === 6 && row === 5) return "autumn_oak";
-
-  if (col === 1 && row === 2) return "chest";
-  if (col === 5 && row === 4) return "chest";
-
-  if (col === 3 && row === 0) return "fence_n";
-  if (col === 0 && row === 3) return "fence_w";
-
-  return undefined;
 }

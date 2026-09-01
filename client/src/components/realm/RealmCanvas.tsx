@@ -1,11 +1,15 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { KingdomState } from "@/lib/api/kingdom";
 import type { PlacedCell } from "@/lib/realm/layout";
-import { RealmEngine } from "@/lib/realm/engine";
+import type { PhaserRealmEngine } from "@/lib/realm/phaser-engine";
+import type { RealmAvatar } from "@/lib/realm/phaser-scene";
+import { RealmHUD } from "./RealmHUD";
 
 export interface RealmCanvasProps {
   state: KingdomState;
   selectedCell?: PlacedCell | null;
+  avatar?: RealmAvatar;
+  onToggleAvatar?: () => void;
   className?: string;
   onSelectCell?: (cell: PlacedCell) => void;
 }
@@ -13,41 +17,63 @@ export interface RealmCanvasProps {
 export const RealmCanvas: React.FC<RealmCanvasProps> = ({
   state,
   selectedCell = null,
+  avatar = "prince",
+  onToggleAvatar = () => {},
   className = "",
   onSelectCell
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const engineRef = useRef<RealmEngine | null>(null);
+  const engineRef = useRef<PhaserRealmEngine | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [zoom, setZoom] = useState(1.0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = new RealmEngine();
-    engine.attach(canvas);
-    engine.setState(state);
-    engine.setSelectedCell(selectedCell || null);
-    engineRef.current = engine;
-
-    const container = containerRef.current;
+    let isMounted = true;
     let resizeObserver: ResizeObserver | null = null;
 
-    if (container && typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(() => {
-        engine.resize();
+    import("@/lib/realm/phaser-engine").then(({ PhaserRealmEngine }) => {
+      if (!isMounted || !canvasRef.current) return;
+
+      const engine = new PhaserRealmEngine();
+      engine.attach(canvasRef.current);
+      engine.setAvatar(avatar);
+      engine.setState(state);
+      engine.setSelectedCell(selectedCell || null);
+      engine.setOnSelectCell(onSelectCell || null);
+      engine.onZoomChange((z) => {
+        if (isMounted) setZoom(z);
       });
-      resizeObserver.observe(container);
-    }
+      engineRef.current = engine;
+
+      const container = containerRef.current;
+      if (container && typeof ResizeObserver !== "undefined") {
+        resizeObserver = new ResizeObserver(() => {
+          engine.resize();
+        });
+        resizeObserver.observe(container);
+      }
+    });
 
     return () => {
+      isMounted = false;
       if (resizeObserver) {
         resizeObserver.disconnect();
       }
-      engine.destroy();
-      engineRef.current = null;
+      if (engineRef.current) {
+        engineRef.current.destroy();
+        engineRef.current = null;
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setAvatar(avatar);
+    }
+  }, [avatar]);
 
   useEffect(() => {
     if (engineRef.current) {
@@ -61,6 +87,12 @@ export const RealmCanvas: React.FC<RealmCanvasProps> = ({
     }
   }, [selectedCell]);
 
+  useEffect(() => {
+    if (engineRef.current) {
+      engineRef.current.setOnSelectCell(onSelectCell || null);
+    }
+  }, [onSelectCell]);
+
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!engineRef.current) return;
     const cell = engineRef.current.getCellAt(e.clientX, e.clientY);
@@ -72,28 +104,40 @@ export const RealmCanvas: React.FC<RealmCanvasProps> = ({
     engineRef.current.setHoveredCell(null);
   };
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!engineRef.current || !onSelectCell) return;
-    const cell = engineRef.current.getCellAt(e.clientX, e.clientY);
-    if (cell && (cell.type === "building" || cell.type === "treasury")) {
-      onSelectCell(cell);
-    }
+  const handleZoomIn = () => {
+    engineRef.current?.zoomIn();
+  };
+
+  const handleZoomOut = () => {
+    engineRef.current?.zoomOut();
+  };
+
+  const handleResetCamera = () => {
+    engineRef.current?.resetCamera();
   };
 
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-[360px] sm:h-[460px] rounded-lg overflow-hidden bg-[#547E19] border border-border flex items-center justify-center ${className}`}
+      className={`relative w-full h-[440px] sm:h-[520px] md:h-[580px] rounded-xl overflow-hidden bg-[#5c8628] border border-border flex items-center justify-center select-none ${className}`}
     >
       <canvas
         ref={canvasRef}
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
-        onPointerUp={handlePointerUp}
-        className="w-full h-full block cursor-pointer touch-none"
+        className="w-full h-full block cursor-grab active:cursor-grabbing touch-none"
+      />
+
+      {/* Floating HUD (Top & Bottom Game Overlays) */}
+      <RealmHUD
+        state={state}
+        avatar={avatar}
+        onToggleAvatar={onToggleAvatar}
+        zoom={zoom}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onResetCamera={handleResetCamera}
       />
     </div>
   );
 };
-
-

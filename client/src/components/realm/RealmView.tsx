@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useKingdom } from "@/hooks/useKingdom";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { STORAGE_KEYS } from "@/lib/storage";
+import type { RealmAvatar } from "@/lib/realm/phaser-scene";
 import type { Building } from "@/lib/api/kingdom";
-import { generateKingdomLayout, type PlacedCell } from "@/lib/realm/layout";
+import { type PlacedCell } from "@/lib/realm/layout";
 import { RealmCanvas } from "./RealmCanvas";
-import { RealmGameHUD } from "./RealmGameHUD";
-import { RealmBottomBar } from "./RealmBottomBar";
-import { RealmLegend } from "./RealmLegend";
 import { BuildingDetailModal, type TreasuryDetail } from "./BuildingDetailModal";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
@@ -19,17 +19,17 @@ export interface RealmViewProps {
 }
 
 export const RealmView: React.FC<RealmViewProps> = ({
-  period,
-  activeAccountsCount,
-  totalAccountsCount,
-  onOpenCashModal,
-  onSync,
-  isSyncing
+  period
 }) => {
   const { state, isLoading, error, refresh } = useKingdom(period);
+  const [avatar, setAvatar] = useLocalStorage<RealmAvatar>(STORAGE_KEYS.REALM_AVATAR, "prince");
   const [selectedCell, setSelectedCell] = useState<PlacedCell | null>(null);
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
   const [selectedTreasury, setSelectedTreasury] = useState<TreasuryDetail | null>(null);
+
+  const handleToggleAvatar = () => {
+    setAvatar((prev) => (prev === "prince" ? "princess" : "prince"));
+  };
 
   const handleSelectCell = (cell: PlacedCell) => {
     if (!state) return;
@@ -48,15 +48,6 @@ export const RealmView: React.FC<RealmViewProps> = ({
     }
   };
 
-  const handleSelectBuilding = (building: Building) => {
-    if (!state) return;
-    const cells = generateKingdomLayout(state);
-    const matchingCell = cells.find((c) => c.type === "building" && c.building?.id === building.id) || null;
-    setSelectedCell(matchingCell);
-    setSelectedTreasury(null);
-    setSelectedBuilding(building);
-  };
-
   const handleCloseModal = () => {
     setSelectedCell(null);
     setSelectedBuilding(null);
@@ -65,10 +56,8 @@ export const RealmView: React.FC<RealmViewProps> = ({
 
   if (isLoading) {
     return (
-      <div className="space-y-3 animate-pulse">
-        <div className="h-24 rounded-xl bg-surface/50 border border-border" />
-        <div className="h-[420px] rounded-xl bg-surface/30 border border-border" />
-        <div className="h-14 rounded-xl bg-surface/40 border border-border" />
+      <div className="animate-pulse">
+        <div className="h-[460px] sm:h-[540px] rounded-xl bg-surface/40 border border-border" />
       </div>
     );
   }
@@ -96,35 +85,17 @@ export const RealmView: React.FC<RealmViewProps> = ({
   }
 
   return (
-    <div className="space-y-3 animate-in fade-in duration-200">
-      {/* Top Resource & Player Bar */}
-      <RealmGameHUD
-        state={state}
-        activeAccountsCount={activeAccountsCount}
-        totalAccountsCount={totalAccountsCount}
-        onOpenCashModal={onOpenCashModal}
-        onSync={onSync}
-        isSyncing={isSyncing}
-      />
-
-      {/* Medieval Isometric World Canvas */}
+    <div className="w-full animate-in fade-in duration-200">
+      {/* Canvas Principal con HUD Inmersivo Flotante */}
       <RealmCanvas
         state={state}
+        avatar={avatar}
+        onToggleAvatar={handleToggleAvatar}
         selectedCell={selectedCell}
         onSelectCell={handleSelectCell}
       />
 
-      {/* Bottom Bar & Guild News Feed */}
-      <RealmBottomBar state={state} />
-
-      {/* Building Inventory Accordion */}
-      <RealmLegend
-        buildings={state.buildings}
-        selectedBuildingId={selectedBuilding?.id}
-        onSelectBuilding={handleSelectBuilding}
-      />
-
-      {/* RPG Detail Card Modal */}
+      {/* Modal de Detalle de Edificio / Tesoro */}
       <BuildingDetailModal
         building={selectedBuilding}
         treasury={selectedTreasury}
