@@ -26,6 +26,7 @@ export const CategoryPickerPopover: React.FC<CategoryPickerPopoverProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
 
   const popoverRef = useRef<HTMLDivElement>(null);
+  const mobileSheetRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -54,14 +55,19 @@ export const CategoryPickerPopover: React.FC<CategoryPickerPopoverProps> = ({
     }
   }, [isOpen]);
 
-  // Click outside listener (for desktop popover)
+  // Click outside listener
   useEffect(() => {
     if (!isOpen) return;
 
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
-        onClose();
+      const target = event.target as Node;
+      if (
+        (popoverRef.current && popoverRef.current.contains(target)) ||
+        (mobileSheetRef.current && mobileSheetRef.current.contains(target))
+      ) {
+        return;
       }
+      onClose();
     }
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -119,6 +125,7 @@ export const CategoryPickerPopover: React.FC<CategoryPickerPopoverProps> = ({
         onClick={onClose}
       >
         <div
+          ref={mobileSheetRef}
           className="w-full max-h-[80vh] bg-surface border-t border-border rounded-t-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={handleKeyDown}

@@ -203,7 +203,7 @@ export class PhaserRealmScene extends Phaser.Scene {
 
         sprite.on("pointerover", () => this.setHoveredCell(cell));
         sprite.on("pointerout", () => this.setHoveredCell(null));
-        sprite.on("pointerdown", () => {
+        sprite.on("pointerup", () => {
           if (!this.cameraController?.isCurrentlyDragging()) {
             this.onSelectCellCallback?.(cell);
           }

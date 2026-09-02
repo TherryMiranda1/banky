@@ -46,35 +46,51 @@ export class RealmCameraController {
 
     // 2. Pointer Down (Mouse click / Touch start)
     input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
-      this.isDragging = false;
-      this.dragStartX = pointer.x;
-      this.dragStartY = pointer.y;
-      this.dragStartScrollX = this.camera.scrollX;
-      this.dragStartScrollY = this.camera.scrollY;
-
-      // Detect multitouch pinch start
+      // Check for multitouch pinch start
       if (input.pointer1.isDown && input.pointer2.isDown) {
+        this.isDragging = true;
         const dx = input.pointer1.x - input.pointer2.x;
         const dy = input.pointer1.y - input.pointer2.y;
         this.initialPinchDistance = Math.hypot(dx, dy);
         this.initialPinchZoom = this.camera.zoom;
+      } else {
+        this.isDragging = false;
+        this.dragStartX = pointer.x;
+        this.dragStartY = pointer.y;
+        this.dragStartScrollX = this.camera.scrollX;
+        this.dragStartScrollY = this.camera.scrollY;
       }
     });
 
     // 3. Pointer Move (Mouse drag / Touch move)
     input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
-      // Handle pinch-to-zoom on mobile
-      if (input.pointer1.isDown && input.pointer2.isDown && this.initialPinchDistance) {
+      // Handle pinch-to-zoom on mobile (2 pointers down)
+      if (input.pointer1.isDown && input.pointer2.isDown) {
+        this.isDragging = true;
         const dx = input.pointer1.x - input.pointer2.x;
         const dy = input.pointer1.y - input.pointer2.y;
         const currentDistance = Math.hypot(dx, dy);
-        if (currentDistance > 0) {
+
+        if (!this.initialPinchDistance) {
+          this.initialPinchDistance = currentDistance;
+          this.initialPinchZoom = this.camera.zoom;
+        } else if (this.initialPinchDistance > 0 && currentDistance > 0) {
           const ratio = currentDistance / this.initialPinchDistance;
           const newZoom = Phaser.Math.Clamp(this.initialPinchZoom * ratio, MIN_ZOOM, MAX_ZOOM);
           const midX = (input.pointer1.x + input.pointer2.x) / 2;
           const midY = (input.pointer1.y + input.pointer2.y) / 2;
           this.applyZoom(newZoom, midX, midY);
         }
+        return;
+      }
+
+      // Transition from pinch to single pointer: re-anchor drag position
+      if (this.initialPinchDistance !== null) {
+        this.initialPinchDistance = null;
+        this.dragStartX = pointer.x;
+        this.dragStartY = pointer.y;
+        this.dragStartScrollX = this.camera.scrollX;
+        this.dragStartScrollY = this.camera.scrollY;
         return;
       }
 
@@ -111,10 +127,11 @@ export class RealmCameraController {
     // 4. Pointer Up (Mouse release / Touch end)
     input.on("pointerup", () => {
       this.initialPinchDistance = null;
-      // Allow slight cooldown so click handlers can inspect isDragging
-      setTimeout(() => {
-        this.isDragging = false;
-      }, 50);
+      if (this.isDragging) {
+        setTimeout(() => {
+          this.isDragging = false;
+        }, 80);
+      }
     });
   }
 

@@ -158,7 +158,7 @@ export function createBuildingCallout(
     onHover(false);
   });
 
-  hitArea.on("pointerdown", () => {
+  hitArea.on("pointerup", () => {
     onSelect();
   });
 

@@ -50,6 +50,9 @@ export class PhaserRealmEngine {
         pixelArt: false,
         antialias: true
       },
+      input: {
+        activePointers: 3
+      },
       callbacks: {
         postBoot: () => {
           if (this.scene) {
