@@ -6,6 +6,31 @@ export const GetKingdomQuerySchema = z.object({
 
 export type GetKingdomQuery = z.infer<typeof GetKingdomQuerySchema>;
 
+export const GetCategoryTrendsQuerySchema = z.object({
+  months: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 6))
+    .refine((val) => !isNaN(val) && val >= 2 && val <= 24, "Months must be between 2 and 24")
+});
+
+export type GetCategoryTrendsQuery = z.infer<typeof GetCategoryTrendsQuerySchema>;
+
+export interface CategoryTrendSeries {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+  data: number[];
+  total: number;
+}
+
+export interface CategoryTrendsResponse {
+  months: string[];
+  monthLabels: string[];
+  series: CategoryTrendSeries[];
+}
+
 export type BuildingType =
   | "treasury"
   | "house"

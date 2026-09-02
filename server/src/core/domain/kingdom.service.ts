@@ -1,5 +1,20 @@
 import { BudgetAnalyticsService } from "../../services/budget-analytics.service.js";
-import { getDb, accounts, bankConnections, eq, and, isNotNull } from "../../db/index.js";
+import {
+  getDb,
+  accounts,
+  bankConnections,
+  categories,
+  transactions,
+  users,
+  eq,
+  and,
+  gte,
+  lte,
+  or,
+  asc,
+  isNotNull
+} from "../../db/index.js";
+import { BillingCycleService } from "./billing-cycle.service.js";
 import type { IKingdomService } from "../ports/IKingdomService.js";
 import type {
   KingdomState,
@@ -8,7 +23,9 @@ import type {
   BuildingStatus,
   KingdomHealth,
   KingdomEvent,
-  KingdomSummary
+  KingdomSummary,
+  CategoryTrendsResponse,
+  CategoryTrendSeries
 } from "../../routes/kingdom/types.js";
 
 export class KingdomService implements IKingdomService {
@@ -218,5 +235,100 @@ export class KingdomService implements IKingdomService {
     }
 
     return Math.round(total * 100) / 100;
+  }
+
+  public async getCategoryTrends(userId: string, months = 6): Promise<CategoryTrendsResponse> {
+    const db = getDb();
+    const [userRow] = await db
+      .select({ cutoffDay: users.cutoffDay })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const cutoffDay = BillingCycleService.validateCutoffDay(userRow?.cutoffDay);
+    const currentPeriod = BillingCycleService.getCurrentPeriod(cutoffDay);
+    const periods = BillingCycleService.getAdjacentPeriods(currentPeriod, months - 1, 0);
+
+    const periodRanges = periods.map((p) => BillingCycleService.getPeriodRange(p, cutoffDay));
+    const earliestFrom = periodRanges[0].from.split("T")[0];
+    const latestTo = periodRanges[periodRanges.length - 1].to.split("T")[0];
+    const latestToVal = `${latestTo}T23:59:59.999Z`;
+
+    const userCategories = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.userId, userId))
+      .orderBy(asc(categories.name));
+
+    const txRows = await db
+      .select({
+        amount: transactions.amount,
+        category: transactions.category,
+        bookedAt: transactions.bookedAt,
+        isTransfer: transactions.isTransfer
+      })
+      .from(transactions)
+      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+      .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+      .where(
+        and(
+          eq(bankConnections.userId, userId),
+          eq(accounts.isActive, true),
+          eq(transactions.isTransfer, false),
+          gte(transactions.bookedAt, earliestFrom),
+          or(lte(transactions.bookedAt, latestToVal), lte(transactions.bookedAt, latestTo))
+        )
+      );
+
+    const categoryPeriodTotals = new Map<string, number[]>();
+    for (const cat of userCategories) {
+      categoryPeriodTotals.set(cat.name.trim().toLowerCase(), new Array(periods.length).fill(0));
+    }
+
+    for (const tx of txRows) {
+      if (tx.isTransfer || !tx.category) continue;
+      const catKey = tx.category.trim().toLowerCase();
+      if (catKey === "traspasos" || catKey === "traspaso") continue;
+
+      const amt = parseFloat(tx.amount);
+      if (isNaN(amt) || amt === 0) continue;
+
+      const txDate = tx.bookedAt.split("T")[0];
+      const periodIndex = periodRanges.findIndex(
+        (r) => txDate >= r.from.split("T")[0] && txDate <= r.to.split("T")[0]
+      );
+
+      if (periodIndex >= 0) {
+        if (!categoryPeriodTotals.has(catKey)) {
+          categoryPeriodTotals.set(catKey, new Array(periods.length).fill(0));
+        }
+        const totals = categoryPeriodTotals.get(catKey)!;
+        totals[periodIndex] += Math.abs(amt);
+      }
+    }
+
+    const series: CategoryTrendSeries[] = userCategories.map((cat) => {
+      const normKey = cat.name.trim().toLowerCase();
+      const rawData = categoryPeriodTotals.get(normKey) || new Array(periods.length).fill(0);
+      const data = rawData.map((v) => Math.round(v * 100) / 100);
+      const total = Math.round(data.reduce((acc, curr) => acc + curr, 0) * 100) / 100;
+
+      return {
+        categoryId: cat.id,
+        categoryName: cat.name,
+        categoryColor: cat.color,
+        categoryIcon: cat.icon,
+        data,
+        total
+      };
+    });
+
+    series.sort((a, b) => b.total - a.total);
+
+    return {
+      months: periods,
+      monthLabels: periodRanges.map((r) => r.label),
+      series
+    };
   }
 }

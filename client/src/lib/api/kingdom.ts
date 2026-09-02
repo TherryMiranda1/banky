@@ -56,3 +56,22 @@ export interface KingdomState {
 export async function getKingdomState(period: string): Promise<KingdomState> {
   return apiFetch<KingdomState>(`/kingdom?period=${encodeURIComponent(period)}`);
 }
+
+export interface CategoryTrendSeries {
+  categoryId: string;
+  categoryName: string;
+  categoryColor: string;
+  categoryIcon: string;
+  data: number[];
+  total: number;
+}
+
+export interface CategoryTrendsResponse {
+  months: string[];
+  monthLabels: string[];
+  series: CategoryTrendSeries[];
+}
+
+export async function getCategoryTrends(months = 6): Promise<CategoryTrendsResponse> {
+  return apiFetch<CategoryTrendsResponse>(`/kingdom/category-trends?months=${months}`);
+}

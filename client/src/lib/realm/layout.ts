@@ -14,26 +14,77 @@ export interface PlacedCell {
   isPerimeter?: boolean;
 }
 
-export const AVAILABLE_BUILDING_SLOTS: Array<{ col: number; row: number }> = [
-  // Anillo Interior (Centro del Reino)
+export const INCOME_BUILDING_SLOTS: Array<{ col: number; row: number }> = [
   { col: 8, row: 8 },
-  { col: 12, row: 8 },
-  { col: 8, row: 12 },
-  { col: 12, row: 12 },
   { col: 10, row: 7 },
+  { col: 7, row: 10 }
+];
+
+export const FIXED_EXPENSE_SLOTS: Array<{ col: number; row: number }> = [
   { col: 7, row: 10 },
-  { col: 13, row: 10 },
-  { col: 10, row: 13 },
-  // Anillo Exterior (Comarcas y Aldeas)
+  { col: 10, row: 7 },
+  { col: 12, row: 8 },
   { col: 5, row: 7 },
-  { col: 15, row: 7 },
-  { col: 5, row: 13 },
-  { col: 15, row: 13 },
   { col: 7, row: 4 },
   { col: 13, row: 4 },
+  { col: 15, row: 7 }
+];
+
+export const OTHER_EXPENSE_SLOTS: Array<{ col: number; row: number }> = [
+  { col: 8, row: 12 },
+  { col: 12, row: 12 },
+  { col: 13, row: 10 },
+  { col: 10, row: 13 },
+  { col: 5, row: 13 },
+  { col: 15, row: 13 },
   { col: 7, row: 16 },
   { col: 13, row: 16 }
 ];
+
+export const AVAILABLE_BUILDING_SLOTS: Array<{ col: number; row: number }> = [
+  ...INCOME_BUILDING_SLOTS,
+  ...FIXED_EXPENSE_SLOTS,
+  ...OTHER_EXPENSE_SLOTS
+];
+
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
+export function isIncomeCategory(categoryName: string): boolean {
+  const norm = normalizeName(categoryName);
+  return (
+    norm.includes("nomina") ||
+    norm.includes("sueldo") ||
+    norm.includes("salario") ||
+    norm.includes("ingreso")
+  );
+}
+
+export function isFixedExpenseCategory(categoryName: string): boolean {
+  const norm = normalizeName(categoryName);
+  return (
+    norm.includes("vivienda") ||
+    norm.includes("hogar") ||
+    norm.includes("alquiler") ||
+    norm.includes("hipoteca") ||
+    norm.includes("compra") ||
+    norm.includes("supermercado") ||
+    norm.includes("alimentacion") ||
+    norm.includes("comida") ||
+    norm.includes("transporte") ||
+    norm.includes("gasolina") ||
+    norm.includes("coche") ||
+    norm.includes("suministro") ||
+    norm.includes("luz") ||
+    norm.includes("agua") ||
+    norm.includes("gas")
+  );
+}
 
 export function isPlazaCell(col: number, row: number): boolean {
   if (col === 10 && row === 10) return true;
@@ -95,14 +146,49 @@ export function isWaterCell(col: number, row: number): boolean {
 
 export function generateKingdomLayout(state: KingdomState): PlacedCell[] {
   const buildingMap = new Map<string, Building>();
-  const buildings = [...state.buildings].sort((a, b) => b.spentAmount - a.spentAmount);
+  const usedSlots = new Set<string>();
 
-  buildings.forEach((b, idx) => {
-    if (idx < AVAILABLE_BUILDING_SLOTS.length) {
-      const slot = AVAILABLE_BUILDING_SLOTS[idx];
-      buildingMap.set(`${slot.col},${slot.row}`, b);
+  const incomeBuildings = state.buildings
+    .filter((b) => isIncomeCategory(b.categoryName))
+    .sort((a, b) => b.spentAmount - a.spentAmount);
+
+  const fixedBuildings = state.buildings
+    .filter((b) => !isIncomeCategory(b.categoryName) && isFixedExpenseCategory(b.categoryName))
+    .sort((a, b) => b.spentAmount - a.spentAmount);
+
+  const otherBuildings = state.buildings
+    .filter((b) => !isIncomeCategory(b.categoryName) && !isFixedExpenseCategory(b.categoryName))
+    .sort((a, b) => b.spentAmount - a.spentAmount);
+
+  const assignBuildingToFirstAvailable = (building: Building, candidateSlots: Array<{ col: number; row: number }>) => {
+    for (const slot of candidateSlots) {
+      const key = `${slot.col},${slot.row}`;
+      if (!usedSlots.has(key)) {
+        usedSlots.add(key);
+        buildingMap.set(key, building);
+        return true;
+      }
     }
-  });
+    return false;
+  };
+
+  for (const b of incomeBuildings) {
+    if (!assignBuildingToFirstAvailable(b, INCOME_BUILDING_SLOTS)) {
+      assignBuildingToFirstAvailable(b, FIXED_EXPENSE_SLOTS);
+    }
+  }
+
+  for (const b of fixedBuildings) {
+    if (!assignBuildingToFirstAvailable(b, FIXED_EXPENSE_SLOTS)) {
+      assignBuildingToFirstAvailable(b, INCOME_BUILDING_SLOTS) || assignBuildingToFirstAvailable(b, OTHER_EXPENSE_SLOTS);
+    }
+  }
+
+  for (const b of otherBuildings) {
+    if (!assignBuildingToFirstAvailable(b, OTHER_EXPENSE_SLOTS)) {
+      assignBuildingToFirstAvailable(b, FIXED_EXPENSE_SLOTS) || assignBuildingToFirstAvailable(b, INCOME_BUILDING_SLOTS);
+    }
+  }
 
   const cells: PlacedCell[] = [];
 

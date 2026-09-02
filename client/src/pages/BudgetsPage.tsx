@@ -14,6 +14,7 @@ import {
 import { useBudgets } from "@/hooks/useBudgets";
 import { SavingsMacroCard } from "@/components/analytics/SavingsMacroCard";
 import { CategoryDonutChart } from "@/components/analytics/CategoryDonutChart";
+import { CategoryTrendChart } from "@/components/analytics/CategoryTrendChart";
 import { BudgetProgressBar } from "@/components/budgets/BudgetProgressBar";
 import { ActionToast } from "@/components/ui/ActionToast";
 
@@ -204,6 +205,9 @@ export const BudgetsPage: React.FC = () => {
               )}
             </div>
           </div>
+
+          {/* Historical Trends Multi-Series Line Chart */}
+          <CategoryTrendChart initialMonths={6} />
         </>
       )}
     </div>

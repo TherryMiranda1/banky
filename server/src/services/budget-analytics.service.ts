@@ -208,6 +208,7 @@ export class BudgetAnalyticsService {
     let totalIncome = 0;
     let totalSpent = 0;
     const spentByCategoryName = new Map<string, number>();
+    const incomeByCategoryName = new Map<string, number>();
     let uncategorizedSpent = 0;
 
     for (const tx of txRows) {
@@ -218,15 +219,21 @@ export class BudgetAnalyticsService {
       const amt = parseFloat(tx.amount);
       if (isNaN(amt)) continue;
 
+      const normCategory = tx.category ? tx.category.trim().toLowerCase() : "";
+
       if (amt > 0) {
         totalIncome += amt;
+        if (normCategory !== "") {
+          const prev = incomeByCategoryName.get(normCategory) ?? 0;
+          incomeByCategoryName.set(normCategory, prev + amt);
+        }
       } else if (amt < 0) {
         const expense = Math.abs(amt);
         totalSpent += expense;
 
-        if (tx.category && tx.category.trim() !== "") {
-          const prev = spentByCategoryName.get(tx.category) ?? 0;
-          spentByCategoryName.set(tx.category, prev + expense);
+        if (normCategory !== "") {
+          const prev = spentByCategoryName.get(normCategory) ?? 0;
+          spentByCategoryName.set(normCategory, prev + expense);
         } else {
           uncategorizedSpent += expense;
         }
@@ -240,7 +247,10 @@ export class BudgetAnalyticsService {
       const budgetAmount = parseFloat(b.amount);
       totalBudgeted += budgetAmount;
 
-      const spentAmount = spentByCategoryName.get(b.categoryName) ?? 0;
+      const normName = b.categoryName.trim().toLowerCase();
+      const spent = spentByCategoryName.get(normName) ?? 0;
+      const income = incomeByCategoryName.get(normName) ?? 0;
+      const spentAmount = spent > 0 ? spent : income;
       const remainingAmount = budgetAmount - spentAmount;
       const spentPercentage = budgetAmount > 0 ? (spentAmount / budgetAmount) * 100 : (spentAmount > 0 ? 100 : 0);
 

@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import {
   AspspInput,
   AspspItem,
@@ -26,8 +25,21 @@ import {
   RawSessionResponse,
   RawTransactionsResponse
 } from "./types.js";
-
 import { getRuntimeEnv } from "../../../env.js";
+
+async function deterministicId(
+  accountId: string,
+  bookedAt: string,
+  amount: string,
+  currency: string,
+  description: string | null
+): Promise<string> {
+  const raw = `${accountId}|${bookedAt}|${amount}|${currency}|${description ?? ""}`;
+  const encoded = new TextEncoder().encode(raw);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
 
 export class EnableBankingAdapter implements IBankingAdapter {
   private readonly baseUrl?: string;
@@ -223,30 +235,42 @@ export class EnableBankingAdapter implements IBankingAdapter {
         `/accounts/${accountId}/transactions${queryString}`
       );
 
-      const pageTransactions = (result.transactions || []).map((t) => {
-        const isDebit = t.credit_debit_indicator === "DBIT";
-        const rawAmount = t.transaction_amount?.amount || "0";
-        const formattedAmount = isDebit && !rawAmount.startsWith("-") ? `-${rawAmount}` : rawAmount;
-        const description =
-          t.remittance_information?.join(" ") ||
-          t.bank_transaction_code?.description ||
-          t.creditor?.name ||
-          t.debtor?.name ||
-          null;
+      const pageTransactions = await Promise.all(
+        (result.transactions || []).map(async (t) => {
+          const isDebit = t.credit_debit_indicator === "DBIT";
+          const rawAmount = t.transaction_amount?.amount || "0";
+          const formattedAmount = isDebit && !rawAmount.startsWith("-") ? `-${rawAmount}` : rawAmount;
+          const description =
+            t.remittance_information?.join(" ") ||
+            t.bank_transaction_code?.description ||
+            t.creditor?.name ||
+            t.debtor?.name ||
+            null;
 
-        return {
-          id: t.transaction_id || t.entry_reference || crypto.randomUUID(),
-          amount: formattedAmount,
-          currency: t.transaction_amount?.currency || "EUR",
-          description,
-          bookedAt:
+          const bookedAt =
             t.booking_date ||
             t.value_date ||
             t.transaction_date ||
-            new Date().toISOString().split("T")[0]!,
-          raw: t
-        };
-      });
+            new Date().toISOString().split("T")[0]!;
+
+          const stableId = t.transaction_id || t.entry_reference || await deterministicId(
+            accountId,
+            bookedAt,
+            formattedAmount,
+            t.transaction_amount?.currency || "EUR",
+            description
+          );
+
+          return {
+            id: stableId,
+            amount: formattedAmount,
+            currency: t.transaction_amount?.currency || "EUR",
+            description,
+            bookedAt,
+            raw: t
+          };
+        })
+      );
 
       allTransactions.push(...pageTransactions);
       continuationKey = result.continuation_key;

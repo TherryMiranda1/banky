@@ -99,6 +99,7 @@ export const RealmView: React.FC<RealmViewProps> = ({
       <BuildingDetailModal
         building={selectedBuilding}
         treasury={selectedTreasury}
+        period={period}
         onClose={handleCloseModal}
       />
     </div>

@@ -75,7 +75,8 @@ export class SyncService {
 
     const conditions = [
       eq(bankConnections.status, "active"),
-      gt(bankConnections.validUntil, nowIso)
+      gt(bankConnections.validUntil, nowIso),
+      ne(bankConnections.aspspName, "cash")
     ];
 
     if (userId) {
@@ -86,6 +87,7 @@ export class SyncService {
       .select({
         id: bankConnections.id,
         userId: bankConnections.userId,
+        aspspName: bankConnections.aspspName,
         sessionIdEnc: bankConnections.sessionIdEnc,
         validUntil: bankConnections.validUntil,
         status: bankConnections.status
@@ -171,8 +173,8 @@ export class SyncService {
                 amount: tx.amount,
                 accountId: account.uid
               });
-              const sourceId = tx.id || null;
-              const compositeId = sourceId ? `${account.uid}::${sourceId}` : `${account.uid}::${crypto.randomUUID()}`;
+              const sourceId = tx.id;
+              const compositeId = `${account.uid}::${sourceId}`;
 
               const res = await this.db
                 .insert(transactions)

@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { Building } from "@/lib/api/kingdom";
+import { getTransactions, type Transaction } from "@/lib/api/transactions";
 import { formatCurrency } from "@/lib/format-utils";
-import { Crown, Flame, AlertCircle, X, CheckCircle2, ChevronRight, Shield, Coins } from "lucide-react";
+import { Crown, Flame, AlertCircle, X, CheckCircle2, ChevronRight, Shield, Coins, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export interface TreasuryDetail {
@@ -14,15 +15,52 @@ export interface TreasuryDetail {
 export interface BuildingDetailModalProps {
   building: Building | null;
   treasury: TreasuryDetail | null;
+  period?: string;
   onClose: () => void;
 }
 
 export const BuildingDetailModal: React.FC<BuildingDetailModalProps> = ({
   building,
   treasury,
+  period,
   onClose
 }) => {
   const navigate = useNavigate();
+  const [transactionsList, setTransactionsList] = useState<Transaction[]>([]);
+  const [isLoadingTx, setIsLoadingTx] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!building) {
+      setTransactionsList([]);
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingTx(true);
+
+    getTransactions({
+      category: building.categoryName,
+      period,
+      limit: 8
+    })
+      .then((res) => {
+        if (isMounted) {
+          setTransactionsList(res.data || []);
+        }
+      })
+      .catch((err) => {
+        console.warn("Failed to load building transactions:", err);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsLoadingTx(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [building, period]);
 
   if (!building && !treasury) return null;
 
@@ -186,9 +224,7 @@ export const BuildingDetailModal: React.FC<BuildingDetailModalProps> = ({
                 <Flame className="w-5 h-5 text-rose-400 shrink-0 animate-pulse" />
                 <div>
                   <div className="font-bold">¡Incendio por Sobregasto!</div>
-                  <div className="text-[11px] text-rose-300/80">
-                    Se superó el presupuesto asignado para esta categoría.
-                  </div>
+                  <div className="text-[11px] text-rose-300/80">Se superó el presupuesto asignado.</div>
                 </div>
               </div>
             )}
@@ -198,9 +234,7 @@ export const BuildingDetailModal: React.FC<BuildingDetailModalProps> = ({
                 <AlertCircle className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
                   <div className="font-bold">Estructura en Ruinas</div>
-                  <div className="text-[11px] text-amber-300/80">
-                    Hay gastos acumulados pero no se configuró un presupuesto.
-                  </div>
+                  <div className="text-[11px] text-amber-300/80">Gastos sin presupuesto configurado.</div>
                 </div>
               </div>
             )}
@@ -210,12 +244,61 @@ export const BuildingDetailModal: React.FC<BuildingDetailModalProps> = ({
                 <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
                 <div>
                   <div className="font-bold">Defensas Intactas</div>
-                  <div className="text-[11px] text-emerald-300/80">
-                    Los gastos se mantienen dentro del límite establecido.
-                  </div>
+                  <div className="text-[11px] text-emerald-300/80">Dentro del límite establecido.</div>
                 </div>
               </div>
             )}
+
+            {/* Transactions Feed */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs px-0.5">
+                <span className="font-semibold text-text flex items-center gap-1.5">
+                  <Receipt className="w-3.5 h-3.5 text-accent" />
+                  <span>Movimientos ({transactionsList.length})</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    navigate(`/accounts?category=${encodeURIComponent(building.categoryName)}`);
+                  }}
+                  className="text-[11px] text-accent hover:underline cursor-pointer"
+                >
+                  Ver todos
+                </button>
+              </div>
+
+              {isLoadingTx ? (
+                <div className="p-3 rounded-xl bg-[#181a26] border border-[#2b2f44] text-center text-xs text-muted font-mono animate-pulse">
+                  Cargando...
+                </div>
+              ) : transactionsList.length === 0 ? (
+                <div className="p-2.5 rounded-xl bg-[#181a26] border border-[#2b2f44] text-center text-[11px] text-muted font-mono">
+                  Sin movimientos registrados en este ciclo.
+                </div>
+              ) : (
+                <div className="max-h-36 overflow-y-auto divide-y divide-[#2b2f44]/50 rounded-xl bg-[#181a26] border border-[#2b2f44]">
+                  {transactionsList.map((tx) => {
+                    const amt = parseFloat(tx.amount);
+                    const isIncome = amt > 0;
+                    const dateStr = tx.bookedAt ? new Date(tx.bookedAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short" }) : "";
+                    return (
+                      <div key={tx.id} className="p-2 px-3 flex items-center justify-between gap-2 hover:bg-[#202334] transition-colors text-xs">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-text text-xs truncate">{tx.description || tx.accountAlias || "Movimiento"}</p>
+                          <p className="text-[10px] text-muted font-mono">{dateStr}</p>
+                        </div>
+                        <div className="shrink-0 font-mono font-semibold text-xs">
+                          <span className={isIncome ? "text-income" : "text-text"}>
+                            {isIncome ? "+" : ""}{formatCurrency(amt)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -223,7 +306,7 @@ export const BuildingDetailModal: React.FC<BuildingDetailModalProps> = ({
                 type="button"
                 onClick={() => {
                   onClose();
-                  navigate("/accounts");
+                  navigate(`/accounts?category=${encodeURIComponent(building.categoryName)}`);
                 }}
                 className="py-2 px-3 rounded-lg bg-[#202334] hover:bg-[#292d42] text-text font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >

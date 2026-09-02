@@ -223,7 +223,7 @@ export async function queryTransactions(params: {
     ) {
       filters.push(or(isNull(transactions.category), eq(transactions.category, ""))!);
     } else {
-      filters.push(eq(transactions.category, params.category));
+      filters.push(sql`lower(${transactions.category}) = ${params.category.toLowerCase()}`);
     }
   }
 

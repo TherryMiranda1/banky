@@ -13,6 +13,7 @@ import {
 import { NotFoundError, BadRequestError } from "../../errors/AppError.js";
 import { queryTransactions } from "../transactions/index.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { encrypt } from "../../services/crypto.js";
 
 export const AccountBalanceSchema = z.object({
   amount: z.string(),
@@ -254,7 +255,7 @@ accountsRouter.post("/cash", async (c) => {
       bankName: "Efectivo",
       aspspName: "cash",
       aspspCountry: "ES",
-      sessionIdEnc: "manual-cash-vault",
+      sessionIdEnc: encrypt("manual-cash-vault"),
       validUntil: "2099-12-31T23:59:59Z",
       status: "active"
     });
