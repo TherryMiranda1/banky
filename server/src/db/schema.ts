@@ -87,6 +87,7 @@ export const categories = sqliteTable(
     name: text("name").notNull(),
     color: text("color").notNull(),
     icon: text("icon").notNull(),
+    realmSprite: text("realm_sprite"),
     position: integer("position").notNull().default(0),
     createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
   },

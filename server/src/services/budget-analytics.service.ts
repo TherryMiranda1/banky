@@ -74,6 +74,7 @@ export class BudgetAnalyticsService {
           categoryName: cat.name,
           categoryColor: cat.color,
           categoryIcon: cat.icon,
+          realmSprite: cat.realmSprite,
           amount: parseFloat(explicit.amount).toFixed(2),
           isInherited: false,
           updatedAt: explicit.updatedAt
@@ -87,6 +88,7 @@ export class BudgetAnalyticsService {
           categoryName: cat.name,
           categoryColor: cat.color,
           categoryIcon: cat.icon,
+          realmSprite: cat.realmSprite,
           amount: parseFloat(inherited.amount).toFixed(2),
           isInherited: true,
           updatedAt: inherited.updatedAt
@@ -98,6 +100,7 @@ export class BudgetAnalyticsService {
         categoryName: cat.name,
         categoryColor: cat.color,
         categoryIcon: cat.icon,
+        realmSprite: cat.realmSprite,
         amount: "0.00",
         isInherited: false
       };
@@ -246,6 +249,7 @@ export class BudgetAnalyticsService {
         categoryName: b.categoryName,
         categoryColor: b.categoryColor,
         categoryIcon: b.categoryIcon,
+        realmSprite: b.realmSprite,
         budgetAmount: Math.round(budgetAmount * 100) / 100,
         spentAmount: Math.round(spentAmount * 100) / 100,
         remainingAmount: Math.round(remainingAmount * 100) / 100,

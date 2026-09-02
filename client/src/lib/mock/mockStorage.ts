@@ -320,13 +320,14 @@ class MockStorageManager {
     return [...this.state.categories].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   }
 
-  public createCategory(data: { name: string; color: string; icon: string }): CategoryItem {
+  public createCategory(data: { name: string; color: string; icon: string; realmSprite?: string | null }): CategoryItem {
     const newCat: CategoryItem = {
       id: `cat-${Date.now()}`,
       userId: this.state.user.id,
       name: data.name,
       color: data.color,
       icon: data.icon,
+      realmSprite: data.realmSprite ?? null,
       position: this.state.categories.length,
       createdAt: new Date().toISOString()
     };
@@ -335,7 +336,7 @@ class MockStorageManager {
     return newCat;
   }
 
-  public updateCategory(id: string, data: { name: string; color: string; icon: string }): CategoryItem {
+  public updateCategory(id: string, data: { name: string; color: string; icon: string; realmSprite?: string | null }): CategoryItem {
     const cat = this.state.categories.find((c) => c.id === id);
     if (!cat) throw new Error("Category not found");
     Object.assign(cat, data);
@@ -510,7 +511,7 @@ class MockStorageManager {
 
     let totalBudgeted = 0;
     const categoryAnalytics = this.state.categories
-      .filter((cat) => cat.id !== "cat-income")
+      .filter((cat) => cat.id !== "cat-nomina" && cat.id !== "cat-traspasos" && cat.name.toLowerCase() !== "traspasos" && cat.name.toLowerCase() !== "traspaso")
       .map((cat) => {
         const budgetAmount = budgetMap.get(cat.id) || 0;
         totalBudgeted += budgetAmount;
@@ -523,6 +524,7 @@ class MockStorageManager {
           categoryName: cat.name,
           categoryColor: cat.color,
           categoryIcon: cat.icon,
+          realmSprite: cat.realmSprite,
           budgetAmount,
           spentAmount,
           remainingAmount,
@@ -564,13 +566,13 @@ class MockStorageManager {
     const buildings: Building[] = analytics.categories.map((cat) => {
       let type: BuildingType = "house";
       const name = cat.categoryName.toLowerCase();
-      if (name.includes("vivienda") || name.includes("alquiler")) type = "house";
-      else if (name.includes("alimentaci") || name.includes("super")) type = "granary";
-      else if (name.includes("restaurante") || name.includes("caf")) type = "tavern";
-      else if (name.includes("transporte") || name.includes("coche")) type = "stable";
-      else if (name.includes("suscrip") || name.includes("ocio")) type = "library";
-      else if (name.includes("compra") || name.includes("ropa")) type = "windmill";
-      else if (name.includes("imprevisto") || name.includes("salud") || name.includes("cuidado")) type = "watchtower";
+      if (name.includes("vivienda") || name.includes("alquiler") || name.includes("hipoteca")) type = "house";
+      else if (name.includes("alimentaci") || name.includes("super") || name.includes("comida")) type = "granary";
+      else if (name.includes("restaurante") || name.includes("caf") || name.includes("bar") || name.includes("ocio")) type = "tavern";
+      else if (name.includes("transporte") || name.includes("coche") || name.includes("viaje")) type = "stable";
+      else if (name.includes("suscrip") || name.includes("streaming")) type = "library";
+      else if (name.includes("servicio") || name.includes("luz") || name.includes("agua") || name.includes("compra") || name.includes("ropa")) type = "windmill";
+      else if (name.includes("imprevisto") || name.includes("salud") || name.includes("farmacia") || name.includes("medico")) type = "watchtower";
       else if (name.includes("ahorro") || name.includes("invers")) type = "vault";
       else if (name.includes("nomina") || name.includes("ingreso")) type = "market";
 
@@ -590,6 +592,7 @@ class MockStorageManager {
         categoryName: cat.categoryName,
         categoryColor: cat.categoryColor,
         categoryIcon: cat.categoryIcon,
+        realmSprite: cat.realmSprite,
         spentAmount: cat.spentAmount,
         budgetAmount: cat.budgetAmount,
         spentPercentage: cat.spentPercentage

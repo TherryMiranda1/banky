@@ -61,13 +61,14 @@ CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(account_id, s
 CREATE INDEX IF NOT EXISTS idx_transactions_transfer ON transactions(is_transfer);
 
 CREATE TABLE IF NOT EXISTS categories (
-  id         TEXT PRIMARY KEY,
-  user_id    TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  name       TEXT NOT NULL,
-  color      TEXT NOT NULL,
-  icon       TEXT NOT NULL,
-  position   INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  id           TEXT PRIMARY KEY,
+  user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name         TEXT NOT NULL,
+  color        TEXT NOT NULL,
+  icon         TEXT NOT NULL,
+  realm_sprite TEXT,
+  position     INTEGER NOT NULL DEFAULT 0,
+  created_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(user_id);

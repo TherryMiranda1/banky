@@ -45,7 +45,12 @@ export function useCategories() {
     loadData();
   }, [loadData]);
 
-  const handleCreateCategory = async (data: { name: string; color: string; icon: string }) => {
+  const handleCreateCategory = async (data: {
+    name: string;
+    color: string;
+    icon: string;
+    realmSprite?: string | null;
+  }) => {
     const created = await createCategory(data);
     setCategories((prev) => [...prev, created]);
     return created;
@@ -53,7 +58,12 @@ export function useCategories() {
 
   const handleUpdateCategory = async (
     id: string,
-    data: { name: string; color: string; icon: string }
+    data: {
+      name: string;
+      color: string;
+      icon: string;
+      realmSprite?: string | null;
+    }
   ) => {
     const updated = await updateCategory(id, data);
     setCategories((prev) =>

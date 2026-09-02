@@ -30,6 +30,7 @@ export interface Building {
   categoryName: string;
   categoryColor: string;
   categoryIcon: string;
+  realmSprite?: string | null;
   spentAmount: number;
   budgetAmount: number;
   spentPercentage: number;

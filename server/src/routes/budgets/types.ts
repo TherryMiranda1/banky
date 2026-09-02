@@ -24,6 +24,7 @@ export interface BudgetItemResponse {
   categoryName: string;
   categoryColor: string;
   categoryIcon: string;
+  realmSprite?: string | null;
   amount: string;
   isInherited: boolean;
   updatedAt?: string;
@@ -34,6 +35,7 @@ export interface CategoryAnalyticsItem {
   categoryName: string;
   categoryColor: string;
   categoryIcon: string;
+  realmSprite?: string | null;
   budgetAmount: number;
   spentAmount: number;
   remainingAmount: number;

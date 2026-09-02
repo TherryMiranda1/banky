@@ -6,6 +6,7 @@ export interface CategoryItem {
   name: string;
   color: string;
   icon: string;
+  realmSprite?: string | null;
   position?: number;
   createdAt: string;
 }
@@ -64,6 +65,7 @@ export async function createCategory(data: {
   name: string;
   color: string;
   icon: string;
+  realmSprite?: string | null;
 }): Promise<CategoryItem> {
   const res = await apiFetch<CategoryResponse>("/categories", {
     method: "POST",
@@ -74,7 +76,12 @@ export async function createCategory(data: {
 
 export async function updateCategory(
   id: string,
-  data: { name: string; color: string; icon: string }
+  data: {
+    name: string;
+    color: string;
+    icon: string;
+    realmSprite?: string | null;
+  }
 ): Promise<CategoryItem> {
   const res = await apiFetch<CategoryResponse>(`/categories/${id}`, {
     method: "PUT",

@@ -27,13 +27,15 @@ categoriesRouter.use("*", requireAuth);
 const CreateCategorySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(50),
   color: z.string().trim().min(1, "Color is required").max(30),
-  icon: z.string().trim().min(1, "Icon is required").max(50)
+  icon: z.string().trim().min(1, "Icon is required").max(50),
+  realmSprite: z.string().trim().optional().nullable()
 });
 
 const UpdateCategorySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(50),
   color: z.string().trim().min(1, "Color is required").max(30),
-  icon: z.string().trim().min(1, "Icon is required").max(50)
+  icon: z.string().trim().min(1, "Icon is required").max(50),
+  realmSprite: z.string().trim().optional().nullable()
 });
 
 const ReorderCategoriesSchema = z.object({
@@ -158,7 +160,7 @@ categoriesRouter.post(
   }),
   async (c) => {
     const userId = c.get("userId");
-    const { name, color, icon } = c.req.valid("json");
+    const { name, color, icon, realmSprite } = c.req.valid("json");
     const db = getDb();
 
     const categoryId = crypto.randomUUID();
@@ -176,6 +178,7 @@ categoriesRouter.post(
       name,
       color,
       icon,
+      realmSprite: realmSprite ?? null,
       position: nextPosition,
       createdAt: now
     });
@@ -202,7 +205,7 @@ categoriesRouter.put(
   async (c) => {
     const userId = c.get("userId");
     const id = c.req.param("id");
-    const { name, color, icon } = c.req.valid("json");
+    const { name, color, icon, realmSprite } = c.req.valid("json");
     const db = getDb();
 
     const [existing] = await db
@@ -217,7 +220,7 @@ categoriesRouter.put(
 
     await db
       .update(categories)
-      .set({ name, color, icon })
+      .set({ name, color, icon, realmSprite: realmSprite ?? null })
       .where(and(eq(categories.id, id), eq(categories.userId, userId)));
 
     const [updated] = await db

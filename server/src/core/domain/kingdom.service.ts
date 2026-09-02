@@ -41,6 +41,7 @@ export class KingdomService implements IKingdomService {
           categoryName: cat.categoryName,
           categoryColor: cat.categoryColor,
           categoryIcon: cat.categoryIcon,
+          realmSprite: cat.realmSprite,
           spentAmount: cat.spentAmount,
           budgetAmount: cat.budgetAmount,
           spentPercentage: cat.spentPercentage

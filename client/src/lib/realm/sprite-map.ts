@@ -3,14 +3,47 @@ import type { Building } from "@/lib/api/kingdom";
 export const TREASURY_KEY = "incomes";
 export const GROUND_KEY = "ground";
 
+export interface RealmSpriteOption {
+  key: string;
+  name: string;
+  categoryHint: string;
+  assetPath: string;
+}
+
+export const AVAILABLE_REALM_SPRITES: RealmSpriteOption[] = [
+  { key: "incomes", name: "Mercado / Tesoro", categoryHint: "Nómina, ingresos, ventas", assetPath: "/assets/incomes.png" },
+  { key: "savings", name: "Bóveda Real", categoryHint: "Ahorro, inversiones, depósitos", assetPath: "/assets/savings.png" },
+  { key: "food", name: "Granero", categoryHint: "Alimentación, supermercado, víveres", assetPath: "/assets/food.png" },
+  { key: "home", name: "Residencia", categoryHint: "Vivienda, alquiler, hipoteca", assetPath: "/assets/home.png" },
+  { key: "transport", name: "Establo", categoryHint: "Transporte, combustible, vehículos", assetPath: "/assets/transport.png" },
+  { key: "leisure", name: "Taberna", categoryHint: "Ocio, restaurantes, cafés, bares", assetPath: "/assets/leisure.png" },
+  { key: "storehouse", name: "Almacén", categoryHint: "Servicios, compras, ropa, hogar", assetPath: "/assets/storehouse.png" },
+  { key: "subscriptions", name: "Biblioteca", categoryHint: "Suscripciones, software, streaming", assetPath: "/assets/subscriptions.png" },
+  { key: "unexpected", name: "Torre de Guardia", categoryHint: "Imprevistos, emergencias, multas", assetPath: "/assets/unexpected.png" },
+  { key: "healt", name: "Botica", categoryHint: "Salud, farmacia, consultas médicas", assetPath: "/assets/healt.png" },
+  { key: "insurance", name: "Casa de Guardia", categoryHint: "Seguros y pólizas", assetPath: "/assets/insurance.png" },
+  { key: "debt", name: "Mazmorra", categoryHint: "Deudas, préstamos, tarjetas", assetPath: "/assets/debt.png" }
+];
+
+export const AVAILABLE_REALM_SPRITE_KEYS = new Set(AVAILABLE_REALM_SPRITES.map((s) => s.key));
+
 export function getSpriteKey(building?: Building | null): string {
-  if (!building || !building.categoryName) {
+  if (!building) {
+    return "home";
+  }
+
+  // 1. Prioridad: Sprite explícito asignado en la categoría
+  if (building.realmSprite && AVAILABLE_REALM_SPRITE_KEYS.has(building.realmSprite)) {
+    return building.realmSprite;
+  }
+
+  if (!building.categoryName) {
     return "home";
   }
 
   const name = building.categoryName.toLowerCase();
 
-  // 1. Nómina / Ingresos
+  // 2. Fallbacks heurísticos por nombre de categoría
   if (
     name.includes("nómina") ||
     name.includes("nomina") ||
@@ -20,7 +53,6 @@ export function getSpriteKey(building?: Building | null): string {
     return "incomes";
   }
 
-  // 2. Ahorro / Inversión
   if (
     name.includes("ahorro") ||
     name.includes("saving") ||
@@ -30,20 +62,36 @@ export function getSpriteKey(building?: Building | null): string {
     return "savings";
   }
 
-  // 3. Compras / Ropa / Shopping / Despensa / Mantenimiento
   if (
-    name.includes("compra") ||
-    name.includes("ropa") ||
-    name.includes("shopping") ||
-    name.includes("despensa") ||
-    name.includes("cosas de casa") ||
-    name.includes("mantenimiento") ||
-    name.includes("storehouse")
+    name.includes("alimentación") ||
+    name.includes("alimentacion") ||
+    name.includes("comida") ||
+    name.includes("supermercado") ||
+    name.includes("super") ||
+    name.includes("food")
   ) {
-    return "storehouse";
+    return "food";
   }
 
-  // 4. Restaurantes / Cafés / Bares / Ocio
+  if (
+    name.includes("vivienda") ||
+    name.includes("hogar") ||
+    name.includes("alquiler") ||
+    name.includes("hipoteca") ||
+    name.includes("home")
+  ) {
+    return "home";
+  }
+
+  if (
+    name.includes("transporte") ||
+    name.includes("combustible") ||
+    name.includes("viaje") ||
+    name.includes("transport")
+  ) {
+    return "transport";
+  }
+
   if (
     name.includes("restaurante") ||
     name.includes("café") ||
@@ -58,40 +106,30 @@ export function getSpriteKey(building?: Building | null): string {
     return "leisure";
   }
 
-  // 5. Alimentación / Comida / Supermercado
   if (
-    name.includes("alimentación") ||
-    name.includes("alimentacion") ||
-    name.includes("comida") ||
-    name.includes("supermercado") ||
-    name.includes("super") ||
-    name.includes("food")
+    name.includes("compra") ||
+    name.includes("ropa") ||
+    name.includes("shopping") ||
+    name.includes("despensa") ||
+    name.includes("cosas de casa") ||
+    name.includes("mantenimiento") ||
+    name.includes("storehouse") ||
+    name.includes("servicio") ||
+    name.includes("luz") ||
+    name.includes("agua") ||
+    name.includes("gas")
   ) {
-    return "food";
+    return "storehouse";
   }
 
-  // 6. Vivienda / Hogar / Alquiler / Hipoteca
   if (
-    name.includes("vivienda") ||
-    name.includes("hogar") ||
-    name.includes("alquiler") ||
-    name.includes("hipoteca") ||
-    name.includes("home")
+    name.includes("suscripci") ||
+    name.includes("streaming") ||
+    name.includes("subscription")
   ) {
-    return "home";
+    return "subscriptions";
   }
 
-  // 7. Transporte / Combustible / Viajes
-  if (
-    name.includes("transporte") ||
-    name.includes("combustible") ||
-    name.includes("viaje") ||
-    name.includes("transport")
-  ) {
-    return "transport";
-  }
-
-  // 8. Salud / Farmacia / Médico
   if (
     name.includes("salud") ||
     name.includes("farmacia") ||
@@ -103,22 +141,10 @@ export function getSpriteKey(building?: Building | null): string {
     return "healt";
   }
 
-  // 9. Seguros / Seguro
   if (name.includes("seguro") || name.includes("insurance")) {
     return "insurance";
   }
 
-  // 10. Suscripciones / Servicios / Streaming
-  if (
-    name.includes("suscripci") ||
-    name.includes("servicio") ||
-    name.includes("streaming") ||
-    name.includes("subscription")
-  ) {
-    return "subscriptions";
-  }
-
-  // 11. Deuda / Préstamo / Tarjeta
   if (
     name.includes("deuda") ||
     name.includes("préstamo") ||
@@ -129,7 +155,6 @@ export function getSpriteKey(building?: Building | null): string {
     return "debt";
   }
 
-  // 12. Imprevisto / Inesperado / Multas
   if (
     name.includes("imprevisto") ||
     name.includes("inesperado") ||

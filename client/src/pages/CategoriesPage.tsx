@@ -23,6 +23,7 @@ import { CategoryBadge } from "@/components/transactions/CategoryBadge";
 import { CategoryModal, ICON_MAP } from "@/components/categories/CategoryModal";
 import { RuleModal } from "@/components/categories/RuleModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { AVAILABLE_REALM_SPRITES } from "@/lib/realm/sprite-map";
 
 export const CategoriesPage: React.FC = () => {
   const {
@@ -267,8 +268,28 @@ export const CategoriesPage: React.FC = () => {
 
                       {/* Info */}
                       <div className="min-w-0">
-                        <p className="font-medium text-xs text-text truncate">{cat.name}</p>
-                        <p className="text-[10px] text-muted font-mono">{catRulesCount} {catRulesCount === 1 ? "regla" : "reglas"}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-medium text-xs text-text truncate">{cat.name}</p>
+                          {cat.realmSprite && (
+                            <img
+                              src={AVAILABLE_REALM_SPRITES.find((s) => s.key === cat.realmSprite)?.assetPath || "/assets/home.png"}
+                              alt=""
+                              title={`Edificio Reino: ${AVAILABLE_REALM_SPRITES.find((s) => s.key === cat.realmSprite)?.name || cat.realmSprite}`}
+                              className="w-3.5 h-3.5 object-contain pixelated shrink-0 opacity-75 hover:opacity-100"
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-muted font-mono">
+                          <span>{catRulesCount} {catRulesCount === 1 ? "regla" : "reglas"}</span>
+                          {cat.realmSprite && (
+                            <>
+                              <span>•</span>
+                              <span className="truncate max-w-[100px] text-muted/70">
+                                {AVAILABLE_REALM_SPRITES.find((s) => s.key === cat.realmSprite)?.name}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 

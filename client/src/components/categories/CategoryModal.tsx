@@ -19,6 +19,7 @@ import {
   LucideIcon
 } from "lucide-react";
 import { CategoryItem } from "@/lib/api/categories";
+import { AVAILABLE_REALM_SPRITES, RealmSpriteOption } from "@/lib/realm/sprite-map";
 
 export const ICON_MAP: Record<string, LucideIcon> = {
   ShoppingBag,
@@ -57,7 +58,7 @@ interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
   categoryToEdit?: CategoryItem | null;
-  onSave: (data: { name: string; color: string; icon: string }) => Promise<void>;
+  onSave: (data: { name: string; color: string; icon: string; realmSprite?: string | null }) => Promise<void>;
 }
 
 export const CategoryModal: React.FC<CategoryModalProps> = ({
@@ -69,6 +70,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   const [name, setName] = useState("");
   const [color, setColor] = useState(COLOR_PALETTE[0]);
   const [icon, setIcon] = useState("Tag");
+  const [realmSprite, setRealmSprite] = useState<string>("home");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,10 +79,12 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       setName(categoryToEdit.name);
       setColor(categoryToEdit.color);
       setIcon(categoryToEdit.icon);
+      setRealmSprite(categoryToEdit.realmSprite || "home");
     } else {
       setName("");
       setColor(COLOR_PALETTE[0]);
       setIcon("Tag");
+      setRealmSprite("home");
     }
     setError(null);
   }, [categoryToEdit, isOpen]);
@@ -96,7 +100,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     try {
       setSubmitting(true);
       setError(null);
-      await onSave({ name: name.trim(), color, icon });
+      await onSave({ name: name.trim(), color, icon, realmSprite });
       onClose();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al guardar la categoría");
@@ -106,15 +110,16 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   };
 
   const SelectedIcon = ICON_MAP[icon] || Tag;
+  const selectedSpriteObj = AVAILABLE_REALM_SPRITES.find((s) => s.key === realmSprite) || AVAILABLE_REALM_SPRITES[3];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-surface border border-border rounded-xl max-w-md w-full p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between pb-4 border-b border-border mb-4">
+      <div className="bg-surface border border-border rounded-xl max-w-lg w-full max-h-[90vh] flex flex-col p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between pb-4 border-b border-border mb-4 shrink-0">
           <div className="flex items-center gap-2.5">
             <div
               style={{ color, backgroundColor: `${color}20`, borderColor: `${color}40` }}
-              className="w-8 h-8 rounded-lg flex items-center justify-center border"
+              className="w-8 h-8 rounded-lg flex items-center justify-center border shrink-0"
             >
               <SelectedIcon className="w-4 h-4" />
             </div>
@@ -122,7 +127,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               <h3 className="font-bold text-base text-text">
                 {categoryToEdit ? "Editar Categoría" : "Nueva Categoría"}
               </h3>
-              <p className="text-xs text-muted font-mono">Personalizá color e ícono identificativo</p>
+              <p className="text-xs text-muted font-mono">Personalizá color, ícono y su edificio en el Reino</p>
             </div>
           </div>
           <button
@@ -135,12 +140,12 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
         </div>
 
         {error && (
-          <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono">
+          <div className="mb-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono shrink-0">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto pr-1 flex-1">
           <div>
             <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
               Nombre de la categoría
@@ -176,9 +181,9 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
 
           <div>
             <label className="block text-xs font-mono uppercase tracking-wider text-muted mb-1.5">
-              Ícono
+              Ícono de UI
             </label>
-            <div className="grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-1 bg-bg/50 rounded-lg border border-border/60">
+            <div className="grid grid-cols-5 gap-2 max-h-32 overflow-y-auto p-1 bg-bg/50 rounded-lg border border-border/60">
               {Object.entries(ICON_MAP).map(([key, IconComp]) => (
                 <button
                   key={key}
@@ -197,7 +202,48 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-mono uppercase tracking-wider text-muted">
+                Edificio en el Reino (Phaser)
+              </label>
+              <span className="text-[11px] font-mono text-accent flex items-center gap-1.5">
+                <img src={selectedSpriteObj.assetPath} alt="" className="w-4 h-4 object-contain pixelated" />
+                {selectedSpriteObj.name}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-2 bg-bg/50 rounded-lg border border-border/60">
+              {AVAILABLE_REALM_SPRITES.map((sprite: RealmSpriteOption) => {
+                const isSelected = realmSprite === sprite.key;
+                return (
+                  <button
+                    key={sprite.key}
+                    type="button"
+                    onClick={() => setRealmSprite(sprite.key)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all text-center cursor-pointer border ${
+                      isSelected
+                        ? "bg-accent/15 border-accent text-text shadow-xs"
+                        : "bg-surface/50 border-border/50 text-muted hover:text-text hover:bg-surface hover:border-border"
+                    }`}
+                  >
+                    <img
+                      src={sprite.assetPath}
+                      alt={sprite.name}
+                      className="w-8 h-8 object-contain mb-1 drop-shadow-xs pixelated"
+                    />
+                    <span className="text-[10px] font-semibold tracking-tight truncate max-w-full">
+                      {sprite.name}
+                    </span>
+                    <span className="text-[8px] text-muted truncate max-w-full font-mono">
+                      {sprite.key}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-border flex items-center justify-end gap-2 shrink-0">
             <button
               type="button"
               onClick={onClose}

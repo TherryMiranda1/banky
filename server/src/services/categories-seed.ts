@@ -5,6 +5,7 @@ export interface DefaultCategorySeed {
   name: string;
   color: string;
   icon: string;
+  realmSprite?: string | null;
   rules: Array<{ pattern: string; priority: number }>;
 }
 
@@ -13,6 +14,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Alimentación",
     color: "#10b981",
     icon: "ShoppingBag",
+    realmSprite: "food",
     rules: [
       {
         pattern: "mercadona|carrefour|dia|lidl|eroski|supermercado|alcampo|consum|hipercor",
@@ -24,6 +26,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Vivienda",
     color: "#3b82f6",
     icon: "Home",
+    realmSprite: "home",
     rules: [
       {
         pattern: "alquiler|hipoteca|rent|comunidad|seguro hogar",
@@ -35,6 +38,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Transporte",
     color: "#f59e0b",
     icon: "Car",
+    realmSprite: "transport",
     rules: [
       {
         pattern: "uber|cabify|renfe|repsol|cepsa|gasolinera|metro|alsa|parking|gasoil|gasolina",
@@ -46,6 +50,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Ocio",
     color: "#a855f7",
     icon: "Sparkles",
+    realmSprite: "leisure",
     rules: [
       {
         pattern: "netflix|spotify|hbo|disney|steam|cinema|cine|playstation|prime video|youtube|teatro",
@@ -57,6 +62,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Servicios",
     color: "#06b6d4",
     icon: "Zap",
+    realmSprite: "storehouse",
     rules: [
       {
         pattern: "endesa|iberdrola|naturgy|vodafone|movistar|orange|digi|agua|luz|gas natural",
@@ -68,6 +74,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Suscripciones",
     color: "#8b5cf6",
     icon: "CreditCard",
+    realmSprite: "subscriptions",
     rules: [
       {
         pattern: "netflix|spotify|hbo|disney|prime|youtube premium|apple|adobe|microsoft 365|chatgpt|openai|notion|dropbox|icloud|steam",
@@ -79,6 +86,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Imprevistos",
     color: "#f97316",
     icon: "ShieldAlert",
+    realmSprite: "unexpected",
     rules: [
       {
         pattern: "farmacia|medico|hospital|reparacion|fontanero|electricista|veterinario|clinica|urgencias",
@@ -90,6 +98,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Ahorro",
     color: "#22c55e",
     icon: "PiggyBank",
+    realmSprite: "savings",
     rules: [
       {
         pattern: "ahorro|deposito|fondo|inversion|myinvestor|indexa|degiro|trade republic|cuenta ahorro",
@@ -101,6 +110,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Nómina",
     color: "#00E5A0",
     icon: "Briefcase",
+    realmSprite: "incomes",
     rules: [
       {
         pattern: "nomina|salary|sueldo|transferencia a favor",
@@ -112,6 +122,7 @@ export const DEFAULT_CATEGORIES: DefaultCategorySeed[] = [
     name: "Traspasos",
     color: "#38bdf8",
     icon: "ArrowLeftRight",
+    realmSprite: null,
     rules: [
       {
         pattern: "traspaso|transferencia propia|trf interna|movimiento entre cuentas|revolut to",
@@ -137,6 +148,7 @@ export async function ensureSystemCategories(db: AppDatabase, userId: string): P
       name: "Traspasos",
       color: "#38bdf8",
       icon: "ArrowLeftRight",
+      realmSprite: null,
       createdAt: now
     }).onConflictDoNothing();
   }
@@ -164,6 +176,7 @@ export async function seedDefaultCategoriesIfEmpty(db: AppDatabase, userId: stri
       name: cat.name,
       color: cat.color,
       icon: cat.icon,
+      realmSprite: cat.realmSprite ?? null,
       createdAt: now
     });
     createdCount++;
