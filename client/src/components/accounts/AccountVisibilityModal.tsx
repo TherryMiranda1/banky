@@ -5,6 +5,7 @@ import {
   getBankConnections,
   getAccountsByConnection,
   toggleAccountVisibility,
+  deleteAccount,
   disconnectBank
 } from "@/lib/api/accounts";
 import { BankLogo } from "./BankLogo";
@@ -43,6 +44,8 @@ export const AccountVisibilityModal: React.FC<AccountVisibilityModalProps> = ({
   const [togglingAccountId, setTogglingAccountId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmDeleteAccountId, setConfirmDeleteAccountId] = useState<string | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -174,6 +177,36 @@ export const AccountVisibilityModal: React.FC<AccountVisibilityModalProps> = ({
     }
   };
 
+  const handleDeleteAccount = async (account: Account) => {
+    setIsDeletingAccount(true);
+    setError(null);
+    try {
+      await deleteAccount(account.id);
+      setConnectionAccounts((prev) => prev.filter((a) => a.id !== account.id));
+      setConnections((prev) =>
+        prev.map((c) => {
+          if (c.id === selectedConnectionId) {
+            return {
+              ...c,
+              accountsCount: Math.max(0, c.accountsCount - 1),
+              activeAccountsCount: account.isActive
+                ? Math.max(0, c.activeAccountsCount - 1)
+                : c.activeAccountsCount
+            };
+          }
+          return c;
+        })
+      );
+      setConfirmDeleteAccountId(null);
+      await onUpdated();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al eliminar la cuenta";
+      setError(msg);
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   const selectedConn = connections.find((c) => c.id === selectedConnectionId);
 
   return (
@@ -188,7 +221,10 @@ export const AccountVisibilityModal: React.FC<AccountVisibilityModalProps> = ({
             {selectedConnectionId && connections.length > 1 ? (
               <button
                 type="button"
-                onClick={() => setSelectedConnectionId(null)}
+                onClick={() => {
+                  setSelectedConnectionId(null);
+                  setConfirmDeleteAccountId(null);
+                }}
                 className="p-1 -ml-1 rounded-md text-muted hover:text-text transition-colors cursor-pointer"
                 title="Volver a lista de bancos"
               >
@@ -246,33 +282,85 @@ export const AccountVisibilityModal: React.FC<AccountVisibilityModalProps> = ({
                 Seleccioná una entidad bancaria para activar o desactivar sus cuentas:
               </p>
               <div className="divide-y divide-border border border-border rounded-lg bg-surface/40 overflow-hidden">
-                {connections.map((conn) => (
-                  <div
-                    key={conn.id}
-                    onClick={() => setSelectedConnectionId(conn.id)}
-                    className="p-3.5 flex items-center justify-between hover:bg-surface-elevated transition-colors cursor-pointer group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <BankLogo bankName={conn.bankName} logoUrl={conn.logoUrl} size="md" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-sm text-text group-hover:text-accent transition-colors truncate">
-                            {conn.bankName}
-                          </h4>
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded uppercase bg-surface-elevated border border-border text-muted">
-                            {conn.aspspCountry}
-                          </span>
+                {connections.map((conn) => {
+                  const isConfirmingConn = confirmDeleteId === conn.id;
+
+                  if (isConfirmingConn) {
+                    return (
+                      <div key={conn.id} className="p-3.5 bg-expense/10 space-y-2.5 animate-in fade-in">
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-expense shrink-0 mt-0.5" />
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-semibold text-expense">
+                              ¿Desconectar {conn.bankName}?
+                            </p>
+                            <p className="text-[11px] font-mono text-muted">
+                              Se eliminarán el vínculo bancario y todas sus cuentas asociadas de Banky.
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs font-mono text-muted mt-0.5">
-                          {conn.activeAccountsCount} de {conn.accountsCount} activas
-                        </p>
+                        <div className="flex items-center gap-2 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(null)}
+                            disabled={isDeleting}
+                            className="px-2.5 py-1 text-xs font-mono text-muted hover:text-text transition-colors cursor-pointer"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteConnection(conn.id)}
+                            disabled={isDeleting}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-expense text-white font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
+                          >
+                            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            Confirmar Desconexión
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={conn.id}
+                      onClick={() => setSelectedConnectionId(conn.id)}
+                      className="p-3.5 flex items-center justify-between hover:bg-surface-elevated transition-colors cursor-pointer group"
+                    >
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <BankLogo bankName={conn.bankName} logoUrl={conn.logoUrl} size="md" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold text-sm text-text group-hover:text-accent transition-colors truncate">
+                              {conn.bankName}
+                            </h4>
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded uppercase bg-surface-elevated border border-border text-muted">
+                              {conn.aspspCountry}
+                            </span>
+                          </div>
+                          <p className="text-xs font-mono text-muted mt-0.5">
+                            {conn.activeAccountsCount} de {conn.accountsCount} activas
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteId(conn.id);
+                          }}
+                          className="p-1.5 rounded-md text-muted hover:text-expense hover:bg-expense/10 border border-transparent hover:border-expense/20 transition-colors cursor-pointer"
+                          title={`Eliminar conexión de ${conn.bankName}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <ChevronRight className="w-4 h-4 text-muted group-hover:text-text transition-colors" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <ChevronRight className="w-4 h-4 text-muted group-hover:text-text transition-colors" />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -290,11 +378,53 @@ export const AccountVisibilityModal: React.FC<AccountVisibilityModalProps> = ({
               ) : (
                 <div className="divide-y divide-border border border-border rounded-lg bg-surface/40 overflow-hidden">
                   {connectionAccounts.map((account) => {
+                    const isConfirmingAcc = confirmDeleteAccountId === account.id;
                     const isActive = account.isActive ?? true;
                     const isToggling = togglingAccountId === account.id;
                     const balanceAmountStr = account.lastBalance?.amount ?? "0.00";
                     const balanceNum = parseFloat(balanceAmountStr);
                     const isNegative = !isNaN(balanceNum) && balanceNum < 0;
+
+                    if (isConfirmingAcc) {
+                      return (
+                        <div key={account.id} className="p-3.5 bg-expense/10 space-y-2 animate-in fade-in">
+                          <div className="flex items-start gap-2">
+                            <AlertTriangle className="w-4 h-4 text-expense shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-expense truncate">
+                                ¿Eliminar cuenta {account.nickname || maskIban(account.iban)}?
+                              </p>
+                              <p className="text-[11px] font-mono text-muted">
+                                Se eliminará permanentemente de Banky con sus movimientos y no volverá a sincronizarse.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 justify-end">
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteAccountId(null)}
+                              disabled={isDeletingAccount}
+                              className="px-2.5 py-1 text-xs font-mono text-muted hover:text-text transition-colors cursor-pointer"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAccount(account)}
+                              disabled={isDeletingAccount}
+                              className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-expense text-white font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
+                            >
+                              {isDeletingAccount ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                              Eliminar cuenta
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
 
                     return (
                       <div
@@ -333,31 +463,42 @@ export const AccountVisibilityModal: React.FC<AccountVisibilityModalProps> = ({
                           </div>
                         </div>
 
-                        {/* Toggle Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleToggle(account)}
-                          disabled={isToggling}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors cursor-pointer shrink-0 ${
-                            isActive
-                              ? "bg-surface-elevated hover:bg-surface border border-border text-text hover:text-expense"
-                              : "bg-income text-bg hover:bg-income/90 font-semibold"
-                          }`}
-                        >
-                          {isToggling ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : isActive ? (
-                            <>
-                              <EyeOff className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">Desactivar</span>
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Activar</span>
-                            </>
-                          )}
-                        </button>
+                        {/* Actions: Toggle visibility & Delete Account */}
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggle(account)}
+                            disabled={isToggling}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-colors cursor-pointer shrink-0 ${
+                              isActive
+                                ? "bg-surface-elevated hover:bg-surface border border-border text-text hover:text-expense"
+                                : "bg-income text-bg hover:bg-income/90 font-semibold"
+                            }`}
+                          >
+                            {isToggling ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : isActive ? (
+                              <>
+                                <EyeOff className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Desactivar</span>
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>Activar</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteAccountId(account.id)}
+                            className="p-1.5 rounded-md text-muted hover:text-expense hover:bg-expense/10 border border-transparent hover:border-expense/20 transition-colors cursor-pointer"
+                            title="Eliminar cuenta permanentemente"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}

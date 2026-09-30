@@ -138,6 +138,10 @@ export async function handleMockRequest<T>(
   }
   if (path.startsWith("/accounts/")) {
     const id = decodeURIComponent(path.replace("/accounts/", ""));
+    if (method === "DELETE") {
+      mockStorage.deleteAccount(id);
+      return { success: true, id } as T;
+    }
     if (method === "PATCH") {
       return mockStorage.updateAccount(id, body) as T;
     }

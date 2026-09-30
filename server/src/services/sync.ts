@@ -5,6 +5,7 @@ import {
   getDb,
   bankConnections,
   accounts,
+  deletedAccounts,
   transactions,
   categories,
   categorizationRules,
@@ -111,6 +112,9 @@ export class SyncService {
 
           try {
             const targetAccountId = await this.resolveTargetAccount(conn.userId, conn.id, account);
+            if (!targetAccountId) {
+              continue;
+            }
 
             const [storedAcc] = await this.db
               .select({ isActive: accounts.isActive })
@@ -219,31 +223,30 @@ export class SyncService {
     userId: string,
     connId: string,
     account: BankAccount
-  ): Promise<string> {
-    let existing: { id: string } | undefined;
+  ): Promise<string | null> {
     if (account.iban) {
-      [existing] = await this.db
-        .select({ id: accounts.id })
-        .from(accounts)
-        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
-        .where(and(eq(bankConnections.userId, userId), eq(accounts.iban, account.iban)))
-        .limit(1);
+      const [isDel] = await this.db.select({ id: deletedAccounts.id }).from(deletedAccounts).where(and(eq(deletedAccounts.userId, userId), eq(deletedAccounts.iban, account.iban))).limit(1);
+      if (isDel) return null;
     }
-    if (!existing && account.identificationHash) {
-      [existing] = await this.db
+    if (account.identificationHash) {
+      const [isDel] = await this.db.select({ id: deletedAccounts.id }).from(deletedAccounts).where(and(eq(deletedAccounts.userId, userId), eq(deletedAccounts.identificationHash, account.identificationHash))).limit(1);
+      if (isDel) return null;
+    }
+
+    const findQuery = (condition: any) =>
+      this.db
         .select({ id: accounts.id })
         .from(accounts)
         .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
-        .where(and(eq(bankConnections.userId, userId), eq(accounts.identificationHash, account.identificationHash)))
+        .where(and(eq(bankConnections.userId, userId), condition))
         .limit(1);
+
+    let [existing] = account.iban ? await findQuery(eq(accounts.iban, account.iban)) : [undefined];
+    if (!existing && account.identificationHash) {
+      [existing] = await findQuery(eq(accounts.identificationHash, account.identificationHash));
     }
     if (!existing) {
-      [existing] = await this.db
-        .select({ id: accounts.id })
-        .from(accounts)
-        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
-        .where(and(eq(bankConnections.userId, userId), eq(accounts.id, account.uid)))
-        .limit(1);
+      [existing] = await findQuery(eq(accounts.id, account.uid));
     }
 
     const targetId = existing ? existing.id : account.uid;

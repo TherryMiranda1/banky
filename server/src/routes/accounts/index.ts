@@ -4,6 +4,7 @@ import {
   getDb,
   accounts,
   bankConnections,
+  deletedAccounts,
   eq,
   and,
   desc,
@@ -22,7 +23,7 @@ import {
   ReorderAccountsSchema,
   AccountTransactionsQuerySchema
 } from "./accounts-types.js";
-import { mapAccountRow } from "./accounts-helpers.js";
+import { mapAccountRow, accountSelectFields } from "./accounts-helpers.js";
 import { connectionsRouter } from "./connections.js";
 import { cashRouter } from "./cash.js";
 
@@ -43,21 +44,7 @@ accountsRouter.get("/", async (c) => {
   const db = getDb();
 
   const rows = await db
-    .select({
-      id: accounts.id,
-      connectionId: accounts.connectionId,
-      alias: accounts.alias,
-      nickname: accounts.nickname,
-      bankName: bankConnections.bankName,
-      logoUrl: bankConnections.logoUrl,
-      iban: accounts.iban,
-      currency: accounts.currency,
-      lastBalance: accounts.lastBalance,
-      syncedAt: accounts.syncedAt,
-      status: bankConnections.status,
-      isActive: accounts.isActive,
-      position: accounts.position
-    })
+    .select(accountSelectFields)
     .from(accounts)
     .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
     .where(eq(bankConnections.userId, userId))
@@ -99,21 +86,7 @@ accountsRouter.put(
     }
 
     const rows = await db
-      .select({
-        id: accounts.id,
-        connectionId: accounts.connectionId,
-        alias: accounts.alias,
-        nickname: accounts.nickname,
-        bankName: bankConnections.bankName,
-        logoUrl: bankConnections.logoUrl,
-        iban: accounts.iban,
-        currency: accounts.currency,
-        lastBalance: accounts.lastBalance,
-        syncedAt: accounts.syncedAt,
-        status: bankConnections.status,
-        isActive: accounts.isActive,
-        position: accounts.position
-      })
+      .select(accountSelectFields)
       .from(accounts)
       .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
       .where(eq(bankConnections.userId, userId))
@@ -148,20 +121,7 @@ accountsRouter.patch(
     await db.update(accounts).set({ isActive }).where(eq(accounts.id, id));
 
     const [updatedRow] = await db
-      .select({
-        id: accounts.id,
-        connectionId: accounts.connectionId,
-        alias: accounts.alias,
-        nickname: accounts.nickname,
-        bankName: bankConnections.bankName,
-        logoUrl: bankConnections.logoUrl,
-        iban: accounts.iban,
-        currency: accounts.currency,
-        lastBalance: accounts.lastBalance,
-        syncedAt: accounts.syncedAt,
-        status: bankConnections.status,
-        isActive: accounts.isActive
-      })
+      .select(accountSelectFields)
       .from(accounts)
       .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
       .where(eq(accounts.id, id))
@@ -206,20 +166,7 @@ accountsRouter.patch(
     }
 
     const [updatedRow] = await db
-      .select({
-        id: accounts.id,
-        connectionId: accounts.connectionId,
-        alias: accounts.alias,
-        nickname: accounts.nickname,
-        bankName: bankConnections.bankName,
-        logoUrl: bankConnections.logoUrl,
-        iban: accounts.iban,
-        currency: accounts.currency,
-        lastBalance: accounts.lastBalance,
-        syncedAt: accounts.syncedAt,
-        status: bankConnections.status,
-        isActive: accounts.isActive
-      })
+      .select(accountSelectFields)
       .from(accounts)
       .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
       .where(eq(accounts.id, id))
@@ -236,20 +183,7 @@ accountsRouter.get("/:id", zValidator("param", AccountParamSchema), async (c) =>
   const db = getDb();
 
   const [row] = await db
-    .select({
-      id: accounts.id,
-      connectionId: accounts.connectionId,
-      alias: accounts.alias,
-      nickname: accounts.nickname,
-      bankName: bankConnections.bankName,
-      logoUrl: bankConnections.logoUrl,
-      iban: accounts.iban,
-      currency: accounts.currency,
-      lastBalance: accounts.lastBalance,
-      syncedAt: accounts.syncedAt,
-      status: bankConnections.status,
-      isActive: accounts.isActive
-    })
+    .select(accountSelectFields)
     .from(accounts)
     .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
     .where(and(eq(accounts.id, id), eq(bankConnections.userId, userId)))
@@ -260,6 +194,39 @@ accountsRouter.get("/:id", zValidator("param", AccountParamSchema), async (c) =>
   }
 
   return c.json(mapAccountRow(row));
+});
+
+// DELETE /accounts/:id - Delete an account and its transactions
+accountsRouter.delete("/:id", zValidator("param", AccountParamSchema), async (c) => {
+  const { id } = c.req.valid("param");
+  const userId = c.get("userId");
+  const db = getDb();
+
+  const [existing] = await db
+    .select({
+      id: accounts.id,
+      iban: accounts.iban,
+      identificationHash: accounts.identificationHash
+    })
+    .from(accounts)
+    .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+    .where(and(eq(accounts.id, id), eq(bankConnections.userId, userId)))
+    .limit(1);
+
+  if (!existing) {
+    throw new NotFoundError(`Account with id '${id}' not found`);
+  }
+
+  await db.insert(deletedAccounts).values({
+    id: `del_${crypto.randomUUID()}`,
+    userId,
+    iban: existing.iban || null,
+    identificationHash: existing.identificationHash || null
+  });
+
+  await db.delete(accounts).where(eq(accounts.id, id));
+
+  return c.json({ success: true, id });
 });
 
 // GET /accounts/:id/transactions - Get transactions for account

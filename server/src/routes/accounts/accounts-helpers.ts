@@ -1,5 +1,22 @@
 import { z } from "zod";
 import { AccountBalanceSchema, AccountResponse } from "./accounts-types.js";
+import { accounts, bankConnections } from "../../db/index.js";
+
+export const accountSelectFields = {
+  id: accounts.id,
+  connectionId: accounts.connectionId,
+  alias: accounts.alias,
+  nickname: accounts.nickname,
+  bankName: bankConnections.bankName,
+  logoUrl: bankConnections.logoUrl,
+  iban: accounts.iban,
+  currency: accounts.currency,
+  lastBalance: accounts.lastBalance,
+  syncedAt: accounts.syncedAt,
+  status: bankConnections.status,
+  isActive: accounts.isActive,
+  position: accounts.position
+};
 
 export interface AccountRawRow {
   id: string;

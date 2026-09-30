@@ -125,6 +125,12 @@ class MockStorageManager {
     throw new Error("Account not found");
   }
 
+  public deleteAccount(id: string): void {
+    this.state.accounts = this.state.accounts.filter((a) => a.id !== id);
+    this.state.transactions = this.state.transactions.filter((t) => t.accountId !== id);
+    this.persist(this.state);
+  }
+
   public reorderAccounts(accountIds: string[]): Account[] {
     const accountMap = new Map(this.state.accounts.map((a) => [a.id, a]));
     const reordered: Account[] = [];

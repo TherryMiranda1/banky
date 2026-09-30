@@ -58,6 +58,20 @@ export const accounts = sqliteTable(
   ]
 );
 
+export const deletedAccounts = sqliteTable(
+  "deleted_accounts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().default("default-user").references(() => users.id, { onDelete: "cascade" }),
+    iban: text("iban"),
+    identificationHash: text("identification_hash"),
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
+  },
+  (table) => [
+    index("idx_deleted_accounts_user").on(table.userId)
+  ]
+);
+
 export const transactions = sqliteTable(
   "transactions",
   {
@@ -314,10 +328,18 @@ export function runMigrations(db: Database.Database): void {
   }
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS deleted_accounts (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default-user' REFERENCES users(id) ON DELETE CASCADE,
+      iban TEXT,
+      identification_hash TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_bank_connections_user ON bank_connections(user_id);
     CREATE INDEX IF NOT EXISTS idx_accounts_connection ON accounts(connection_id);
     CREATE INDEX IF NOT EXISTS idx_accounts_ident_hash ON accounts(identification_hash);
+    CREATE INDEX IF NOT EXISTS idx_deleted_accounts_user ON deleted_accounts(user_id);
     CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
     CREATE INDEX IF NOT EXISTS idx_transactions_booked ON transactions(booked_at);
     CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(account_id, source_id);

@@ -41,6 +41,14 @@ CREATE TABLE IF NOT EXISTS accounts (
   synced_at     TEXT
 );
 
+CREATE TABLE IF NOT EXISTS deleted_accounts (
+  id                  TEXT PRIMARY KEY,
+  user_id             TEXT NOT NULL DEFAULT 'default-user' REFERENCES users(id) ON DELETE CASCADE,
+  iban                TEXT,
+  identification_hash TEXT,
+  created_at          TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS transactions (
   id                TEXT PRIMARY KEY,
   source_id         TEXT,
@@ -57,6 +65,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 CREATE INDEX IF NOT EXISTS idx_accounts_connection ON accounts(connection_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_ident_hash ON accounts(identification_hash);
+CREATE INDEX IF NOT EXISTS idx_deleted_accounts_user ON deleted_accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_booked ON transactions(booked_at);
 CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(account_id, source_id);

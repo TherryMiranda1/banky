@@ -91,6 +91,12 @@ export async function toggleAccountVisibility(
   });
 }
 
+export async function deleteAccount(accountId: string): Promise<{ success: boolean; id: string }> {
+  return apiFetch<{ success: boolean; id: string }>(`/accounts/${encodeURIComponent(accountId)}`, {
+    method: "DELETE"
+  });
+}
+
 export async function getBankConnections(): Promise<BankConnection[]> {
   return apiFetch<BankConnection[]>("/accounts/connections");
 }
