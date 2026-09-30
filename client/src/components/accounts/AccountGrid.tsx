@@ -1,7 +1,7 @@
 import React from "react";
 import { Account } from "@/lib/api/accounts";
 import { AccountCard } from "./AccountCard";
-import { Plus, Landmark } from "lucide-react";
+import { Plus, Landmark, SlidersHorizontal } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface AccountGridProps {
@@ -10,6 +10,7 @@ interface AccountGridProps {
   onEdit?: (account: Account) => void;
   onToggleActive?: (account: Account) => void;
   onMoveAccount?: (index: number, direction: "prev" | "next") => void;
+  onManageAccounts?: () => void;
 }
 
 export const AccountGrid: React.FC<AccountGridProps> = ({
@@ -17,7 +18,8 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
   isLoading,
   onEdit,
   onToggleActive,
-  onMoveAccount
+  onMoveAccount,
+  onManageAccounts
 }) => {
   if (isLoading) {
     return (
@@ -47,16 +49,28 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
   return (
     <div className="rounded-md border border-border bg-surface/30 overflow-hidden">
       {/* Box Header */}
-      <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between">
+      <div className="px-4 py-2.5 bg-surface-elevated border-b border-border flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Landmark className="w-3.5 h-3.5 text-muted" />
           <span className="text-xs font-semibold text-text">
             Cuentas bancarias conectadas
           </span>
         </div>
-        <span className="text-xs font-mono text-muted">
-          {activeCount} de {accounts.length} activas
-        </span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-mono text-muted">
+            {activeCount} de {accounts.length} activas
+          </span>
+          {onManageAccounts && (
+            <button
+              type="button"
+              onClick={onManageAccounts}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-mono text-accent hover:bg-surface border border-accent/30 hover:border-accent transition-colors cursor-pointer"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+              <span>Gestionar</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Account Rows */}
@@ -75,14 +89,26 @@ export const AccountGrid: React.FC<AccountGridProps> = ({
       </div>
 
       {/* Box Footer Action: Connect New Bank */}
-      <div className="px-4 py-2.5 bg-surface/20 border-t border-border/60 flex items-center justify-between">
-        <Link
-          to="/connect"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Conectar otra cuenta o banco...</span>
-        </Link>
+      <div className="px-4 py-2.5 bg-surface/20 border-t border-border/60 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-4">
+          <Link
+            to="/connect"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:underline cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Conectar otra cuenta o banco...</span>
+          </Link>
+          {onManageAccounts && (
+            <button
+              type="button"
+              onClick={onManageAccounts}
+              className="inline-flex items-center gap-1 text-xs font-mono text-muted hover:text-text cursor-pointer transition-colors"
+            >
+              <SlidersHorizontal className="w-3 h-3" />
+              <span>Gestionar entidades</span>
+            </button>
+          )}
+        </div>
         <Link
           to="/accounts"
           className="text-[11px] font-mono text-muted hover:text-text transition-colors"

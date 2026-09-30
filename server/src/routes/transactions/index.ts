@@ -200,6 +200,7 @@ export async function queryTransactions(params: {
     }
   } else if (params.userId) {
     filters.push(eq(bankConnections.userId, params.userId));
+    filters.push(eq(accounts.isActive, true));
   }
 
   if (resolvedFrom) {

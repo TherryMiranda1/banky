@@ -112,6 +112,16 @@ export class SyncService {
           try {
             const targetAccountId = await this.resolveTargetAccount(conn.userId, conn.id, account);
 
+            const [storedAcc] = await this.db
+              .select({ isActive: accounts.isActive })
+              .from(accounts)
+              .where(eq(accounts.id, targetAccountId))
+              .limit(1);
+
+            if (storedAcc && storedAcc.isActive === false) {
+              continue;
+            }
+
             let lastBalanceJson: string | null = null;
             try {
               const balances = await this.adapter.getBalances(account.uid, sessionId);
