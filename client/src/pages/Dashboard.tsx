@@ -1,5 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import React, { useMemo, useState } from "react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useDashboardView } from "@/hooks/useDashboardView";
 import { useAuth } from "@/context/AuthContext";
@@ -8,10 +7,10 @@ import { TotalBalance } from "@/components/balance/TotalBalance";
 import { AccountGrid } from "@/components/accounts/AccountGrid";
 import { EditAccountModal } from "@/components/accounts/EditAccountModal";
 import { CashTransactionModal } from "@/components/transactions/CashTransactionModal";
-import { AccountVisibilityModal } from "@/components/accounts/AccountVisibilityModal";
 import { RealmView } from "@/components/realm/RealmView";
 import { Account, updateAccount, ensureCashAccount } from "@/lib/api/accounts";
 import { Plus, Landmark, AlertCircle, RefreshCw, Calendar, Wallet, Castle } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -33,20 +32,10 @@ export const Dashboard: React.FC = () => {
 
   const { view, setView } = useDashboardView();
 
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [isCashModalOpen, setIsCashModalOpen] = useState<boolean>(false);
   const [cashAccount, setCashAccount] = useState<Account | null>(null);
   const [isInitializingCash, setIsInitializingCash] = useState<boolean>(false);
-  const [isVisibilityModalOpen, setIsVisibilityModalOpen] = useState<boolean>(false);
-
-  useEffect(() => {
-    if (searchParams.get("connected") === "true") {
-      setIsVisibilityModalOpen(true);
-      navigate("/", { replace: true });
-    }
-  }, [searchParams, navigate]);
 
   const handleMoveAccount = async (index: number, direction: "prev" | "next") => {
     if (direction === "prev" && index === 0) return;
@@ -217,7 +206,6 @@ export const Dashboard: React.FC = () => {
           onEdit={(acc) => setEditingAccount(acc)}
           onToggleActive={handleToggleActive}
           onMoveAccount={handleMoveAccount}
-          onManageAccounts={() => setIsVisibilityModalOpen(true)}
         />
       ) : (
         <RealmView
@@ -245,14 +233,6 @@ export const Dashboard: React.FC = () => {
         isOpen={isCashModalOpen}
         onClose={() => setIsCashModalOpen(false)}
         onSuccess={async () => {
-          await refreshData();
-        }}
-      />
-
-      <AccountVisibilityModal
-        isOpen={isVisibilityModalOpen}
-        onClose={() => setIsVisibilityModalOpen(false)}
-        onUpdated={async () => {
           await refreshData();
         }}
       />

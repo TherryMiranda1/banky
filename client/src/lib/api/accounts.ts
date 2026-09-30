@@ -10,7 +10,6 @@ export interface AccountBalance {
 
 export interface Account {
   id: string;
-  connectionId?: string;
   alias: string | null;
   nickname?: string | null;
   bankName: string;
@@ -22,31 +21,6 @@ export interface Account {
   status?: string;
   isActive: boolean;
   position?: number;
-}
-
-export interface BankConnection {
-  id: string;
-  bankName: string;
-  aspspName: string;
-  aspspCountry: string;
-  logoUrl: string | null;
-  status: string;
-  validUntil: string;
-  createdAt: string;
-  accountsCount: number;
-  activeAccountsCount: number;
-}
-
-export interface ConnectionAccountsResponse {
-  connection: {
-    id: string;
-    bankName: string;
-    aspspName: string;
-    logoUrl: string | null;
-    status: string;
-    validUntil: string;
-  };
-  accounts: Account[];
 }
 
 export interface SyncResult {
@@ -71,6 +45,7 @@ export async function getAccount(id: string): Promise<Account> {
   return apiFetch<Account>(`/accounts/${encodeURIComponent(id)}`);
 }
 
+
 export async function updateAccount(
   id: string,
   updates: { nickname?: string | null; isActive?: boolean }
@@ -78,30 +53,6 @@ export async function updateAccount(
   return apiFetch<Account>(`/accounts/${encodeURIComponent(id)}`, {
     method: "PATCH",
     body: JSON.stringify(updates)
-  });
-}
-
-export async function toggleAccountVisibility(
-  accountId: string,
-  isActive: boolean
-): Promise<Account> {
-  return apiFetch<Account>(`/accounts/${encodeURIComponent(accountId)}/visibility`, {
-    method: "PATCH",
-    body: JSON.stringify({ isActive })
-  });
-}
-
-export async function getBankConnections(): Promise<BankConnection[]> {
-  return apiFetch<BankConnection[]>("/accounts/connections");
-}
-
-export async function getAccountsByConnection(connectionId: string): Promise<ConnectionAccountsResponse> {
-  return apiFetch<ConnectionAccountsResponse>(`/accounts/connection/${encodeURIComponent(connectionId)}`);
-}
-
-export async function disconnectBank(connectionId: string): Promise<{ success: boolean; connectionId: string }> {
-  return apiFetch<{ success: boolean; connectionId: string }>(`/accounts/connection/${encodeURIComponent(connectionId)}`, {
-    method: "DELETE"
   });
 }
 

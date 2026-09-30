@@ -73,62 +73,8 @@ export async function handleMockRequest<T>(
   }
 
   // Accounts
-  if (path === "/accounts/connections") {
-    const accs = mockStorage.getAllAccounts();
-    const mockConns = [
-      {
-        id: "mock-conn-santander",
-        bankName: "Santander",
-        aspspName: "Santander ES",
-        aspspCountry: "ES",
-        logoUrl: "https://enablebanking.com/brands/ES/Santander/",
-        status: "active",
-        validUntil: "2027-01-01T00:00:00Z",
-        createdAt: "2026-01-01T00:00:00Z",
-        accountsCount: accs.filter((a) => a.bankName.includes("Santander")).length,
-        activeAccountsCount: accs.filter((a) => a.bankName.includes("Santander") && a.isActive !== false).length
-      },
-      {
-        id: "mock-conn-revolut",
-        bankName: "Revolut",
-        aspspName: "Revolut",
-        aspspCountry: "GB",
-        logoUrl: "https://enablebanking.com/brands/GB/Revolut/",
-        status: "active",
-        validUntil: "2027-01-01T00:00:00Z",
-        createdAt: "2026-01-01T00:00:00Z",
-        accountsCount: accs.filter((a) => a.bankName.includes("Revolut")).length,
-        activeAccountsCount: accs.filter((a) => a.bankName.includes("Revolut") && a.isActive !== false).length
-      }
-    ];
-    return mockConns as T;
-  }
-  if (path.startsWith("/accounts/connection/")) {
-    const connId = decodeURIComponent(path.replace("/accounts/connection/", ""));
-    const all = mockStorage.getAllAccounts();
-    const bankFiltered = connId.includes("santander")
-      ? all.filter((a) => a.bankName.includes("Santander"))
-      : connId.includes("revolut")
-      ? all.filter((a) => a.bankName.includes("Revolut"))
-      : all;
-    return {
-      connection: {
-        id: connId,
-        bankName: connId.includes("revolut") ? "Revolut" : "Santander",
-        aspspName: connId.includes("revolut") ? "Revolut" : "Santander ES",
-        logoUrl: null,
-        status: "active",
-        validUntil: "2027-01-01T00:00:00Z"
-      },
-      accounts: bankFiltered
-    } as T;
-  }
-  if (path.endsWith("/visibility") && method === "PATCH") {
-    const id = decodeURIComponent(path.replace("/accounts/", "").replace("/visibility", ""));
-    return mockStorage.updateAccount(id, { isActive: body.isActive }) as T;
-  }
   if (path === "/accounts") {
-    return mockStorage.getAllAccounts() as T;
+    return mockStorage.getAccounts() as T;
   }
   if (path === "/accounts/reorder" && method === "PUT") {
     return mockStorage.reorderAccounts(body.accountIds || []) as T;
