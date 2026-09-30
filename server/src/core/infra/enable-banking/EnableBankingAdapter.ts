@@ -158,7 +158,8 @@ export class EnableBankingAdapter implements IBankingAdapter {
       uid: acc.uid || crypto.randomUUID(),
       iban: acc.account_id?.iban ?? null,
       currency: acc.currency || "EUR",
-      name: acc.name ?? acc.account_servicer?.name ?? null
+      name: acc.name ?? acc.account_servicer?.name ?? null,
+      identificationHash: acc.identification_hash ?? null
     }));
 
     const validUntil =
@@ -184,14 +185,16 @@ export class EnableBankingAdapter implements IBankingAdapter {
           uid: detail.uid || accountId,
           iban: detail.account_id?.iban ?? null,
           currency: detail.currency || "EUR",
-          name: detail.name ?? detail.account_servicer?.name ?? null
+          name: detail.name ?? detail.account_servicer?.name ?? null,
+          identificationHash: detail.identification_hash ?? null
         });
       } catch {
         accounts.push({
           uid: accountId,
           iban: null,
           currency: "EUR",
-          name: null
+          name: null,
+          identificationHash: null
         });
       }
     }

@@ -43,6 +43,7 @@ export const accounts = sqliteTable(
     id: text("id").primaryKey(),
     connectionId: text("connection_id").notNull().references(() => bankConnections.id, { onDelete: "cascade" }),
     iban: text("iban"),
+    identificationHash: text("identification_hash"),
     alias: text("alias"),
     nickname: text("nickname"),
     isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
@@ -52,7 +53,8 @@ export const accounts = sqliteTable(
     syncedAt: text("synced_at")
   },
   (table) => [
-    index("idx_accounts_connection").on(table.connectionId)
+    index("idx_accounts_connection").on(table.connectionId),
+    index("idx_accounts_ident_hash").on(table.identificationHash)
   ]
 );
 
@@ -272,6 +274,10 @@ export function runMigrations(db: Database.Database): void {
   if (!hasAccPosition) {
     db.exec("ALTER TABLE accounts ADD COLUMN position INTEGER NOT NULL DEFAULT 0");
   }
+  const hasIdentificationHash = accCols.some((col) => col.name === "identification_hash");
+  if (!hasIdentificationHash) {
+    db.exec("ALTER TABLE accounts ADD COLUMN identification_hash TEXT");
+  }
 
   const txCols = db.prepare("PRAGMA table_info(transactions)").all() as Array<{ name: string }>;
   const hasSourceId = txCols.some((col) => col.name === "source_id");
@@ -292,6 +298,10 @@ export function runMigrations(db: Database.Database): void {
   if (!hasCatPosition) {
     db.exec("ALTER TABLE categories ADD COLUMN position INTEGER NOT NULL DEFAULT 0");
   }
+  const hasRealmSprite = catCols.some((col) => col.name === "realm_sprite");
+  if (!hasRealmSprite) {
+    db.exec("ALTER TABLE categories ADD COLUMN realm_sprite TEXT");
+  }
 
   const ruleCols = db.prepare("PRAGMA table_info(categorization_rules)").all() as Array<{ name: string }>;
   const hasAccountId = ruleCols.some((col) => col.name === "account_id");
@@ -307,6 +317,7 @@ export function runMigrations(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
     CREATE INDEX IF NOT EXISTS idx_bank_connections_user ON bank_connections(user_id);
     CREATE INDEX IF NOT EXISTS idx_accounts_connection ON accounts(connection_id);
+    CREATE INDEX IF NOT EXISTS idx_accounts_ident_hash ON accounts(identification_hash);
     CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
     CREATE INDEX IF NOT EXISTS idx_transactions_booked ON transactions(booked_at);
     CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(account_id, source_id);

@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   id            TEXT PRIMARY KEY,
   connection_id TEXT NOT NULL REFERENCES bank_connections(id) ON DELETE CASCADE,
   iban          TEXT,
+  identification_hash TEXT,
   alias         TEXT,
   nickname      TEXT,
   is_active     INTEGER NOT NULL DEFAULT 1,
@@ -55,6 +56,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_accounts_connection ON accounts(connection_id);
+CREATE INDEX IF NOT EXISTS idx_accounts_ident_hash ON accounts(identification_hash);
 CREATE INDEX IF NOT EXISTS idx_transactions_account ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_booked ON transactions(booked_at);
 CREATE INDEX IF NOT EXISTS idx_transactions_source ON transactions(account_id, source_id);

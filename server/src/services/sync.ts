@@ -1,4 +1,4 @@
-import { IBankingAdapter } from "../core/ports/IBankingAdapter.js";
+import { IBankingAdapter, BankAccount } from "../core/ports/IBankingAdapter.js";
 import { getBankingAdapter } from "../core/infra/adapterFactory.js";
 import {
   AppDatabase,
@@ -50,28 +50,9 @@ export class SyncService {
   async syncAll(userId?: string): Promise<SyncResult> {
     const nowIso = new Date().toISOString();
 
-    if (userId) {
-      await this.db
-        .update(bankConnections)
-        .set({ status: "expired" })
-        .where(
-          and(
-            eq(bankConnections.userId, userId),
-            lte(bankConnections.validUntil, nowIso),
-            ne(bankConnections.status, "expired")
-          )
-        );
-    } else {
-      await this.db
-        .update(bankConnections)
-        .set({ status: "expired" })
-        .where(
-          and(
-            lte(bankConnections.validUntil, nowIso),
-            ne(bankConnections.status, "expired")
-          )
-        );
-    }
+    const expireConditions = [lte(bankConnections.validUntil, nowIso), ne(bankConnections.status, "expired")];
+    if (userId) expireConditions.push(eq(bankConnections.userId, userId));
+    await this.db.update(bankConnections).set({ status: "expired" }).where(and(...expireConditions));
 
     const conditions = [
       eq(bankConnections.status, "active"),
@@ -129,48 +110,7 @@ export class SyncService {
           }
 
           try {
-            const [existingAccount] = account.iban
-              ? await this.db
-                  .select({ id: accounts.id })
-                  .from(accounts)
-                  .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
-                  .where(and(eq(bankConnections.userId, conn.userId), eq(accounts.iban, account.iban)))
-                  .limit(1)
-              : [null];
-
-            const targetAccountId = existingAccount ? existingAccount.id : account.uid;
-
-            if (existingAccount) {
-              await this.db
-                .update(accounts)
-                .set({
-                  connectionId: conn.id,
-                  alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
-                  currency: account.currency
-                })
-                .where(eq(accounts.id, targetAccountId));
-            } else {
-              await this.db
-                .insert(accounts)
-                .values({
-                  id: targetAccountId,
-                  connectionId: conn.id,
-                  iban: account.iban || null,
-                  alias: account.name || null,
-                  currency: account.currency,
-                  lastBalance: null,
-                  syncedAt: null
-                })
-                .onConflictDoUpdate({
-                  target: accounts.id,
-                  set: {
-                    connectionId: conn.id,
-                    iban: sql`COALESCE(${account.iban || null}, ${accounts.iban})`,
-                    alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
-                    currency: account.currency
-                  }
-                });
-            }
+            const targetAccountId = await this.resolveTargetAccount(conn.userId, conn.id, account);
 
             let lastBalanceJson: string | null = null;
             try {
@@ -238,22 +178,9 @@ export class SyncService {
 
         syncedCount++;
       } catch (err: unknown) {
-        const isAuthError =
-          (err instanceof AppError && (err.statusCode === 401 || err.statusCode === 403)) ||
-          (typeof err === "object" &&
-            err !== null &&
-            "statusCode" in err &&
-            ((err as any).statusCode === 401 || (err as any).statusCode === 403)) ||
-          (typeof err === "object" &&
-            err !== null &&
-            "status" in err &&
-            ((err as any).status === 401 || (err as any).status === 403));
-
-        if (isAuthError) {
-          await this.db
-            .update(bankConnections)
-            .set({ status: "expired" })
-            .where(eq(bankConnections.id, conn.id));
+        const errStatus = err instanceof AppError ? err.statusCode : typeof err === "object" && err !== null ? ((err as any).statusCode || (err as any).status) : null;
+        if (errStatus === 401 || errStatus === 403) {
+          await this.db.update(bankConnections).set({ status: "expired" }).where(eq(bankConnections.id, conn.id));
         }
 
         const errorMessage = err instanceof Error ? err.message : String(err);
@@ -276,5 +203,76 @@ export class SyncService {
       transactions: totalTransactions,
       errors
     };
+  }
+
+  private async resolveTargetAccount(
+    userId: string,
+    connId: string,
+    account: BankAccount
+  ): Promise<string> {
+    let existing: { id: string } | undefined;
+    if (account.iban) {
+      [existing] = await this.db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+        .where(and(eq(bankConnections.userId, userId), eq(accounts.iban, account.iban)))
+        .limit(1);
+    }
+    if (!existing && account.identificationHash) {
+      [existing] = await this.db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+        .where(and(eq(bankConnections.userId, userId), eq(accounts.identificationHash, account.identificationHash)))
+        .limit(1);
+    }
+    if (!existing) {
+      [existing] = await this.db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+        .where(and(eq(bankConnections.userId, userId), eq(accounts.id, account.uid)))
+        .limit(1);
+    }
+
+    const targetId = existing ? existing.id : account.uid;
+
+    if (existing) {
+      await this.db
+        .update(accounts)
+        .set({
+          connectionId: connId,
+          identificationHash: account.identificationHash || sql`${accounts.identificationHash}`,
+          alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
+          currency: account.currency
+        })
+        .where(eq(accounts.id, targetId));
+    } else {
+      await this.db
+        .insert(accounts)
+        .values({
+          id: targetId,
+          connectionId: connId,
+          iban: account.iban || null,
+          identificationHash: account.identificationHash || null,
+          alias: account.name || null,
+          currency: account.currency,
+          lastBalance: null,
+          syncedAt: null
+        })
+        .onConflictDoUpdate({
+          target: accounts.id,
+          set: {
+            connectionId: connId,
+            iban: sql`COALESCE(${account.iban || null}, ${accounts.iban})`,
+            identificationHash: account.identificationHash || sql`${accounts.identificationHash}`,
+            alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
+            currency: account.currency
+          }
+        });
+    }
+
+    return targetId;
   }
 }

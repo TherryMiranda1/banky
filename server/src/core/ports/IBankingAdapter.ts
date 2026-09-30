@@ -17,6 +17,7 @@ export interface BankAccount {
   iban: string | null;
   currency: string;
   name: string | null;
+  identificationHash?: string | null;
 }
 
 export interface SessionData {

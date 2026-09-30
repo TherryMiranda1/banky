@@ -22,6 +22,7 @@ export interface RawAccountItem {
   account_id?: {
     iban?: string | null;
   };
+  identification_hash?: string | null;
   account_servicer?: {
     name?: string | null;
   };

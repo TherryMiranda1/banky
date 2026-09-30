@@ -90,20 +90,41 @@ async function handleCallbackCore(
   });
 
   for (const account of sessionData.accounts) {
-    const [existingAccount] = account.iban
-      ? await db
-          .select({ id: accounts.id })
-          .from(accounts)
-          .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
-          .where(and(eq(bankConnections.userId, userId), eq(accounts.iban, account.iban)))
-          .limit(1)
-      : [null];
+    let existingAccount: { id: string } | undefined;
+    if (account.iban) {
+      const [byIban] = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+        .where(and(eq(bankConnections.userId, userId), eq(accounts.iban, account.iban)))
+        .limit(1);
+      existingAccount = byIban;
+    }
+    if (!existingAccount && account.identificationHash) {
+      const [byHash] = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+        .where(and(eq(bankConnections.userId, userId), eq(accounts.identificationHash, account.identificationHash)))
+        .limit(1);
+      existingAccount = byHash;
+    }
+    if (!existingAccount) {
+      const [byUid] = await db
+        .select({ id: accounts.id })
+        .from(accounts)
+        .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+        .where(and(eq(bankConnections.userId, userId), eq(accounts.id, account.uid)))
+        .limit(1);
+      existingAccount = byUid;
+    }
 
     if (existingAccount) {
       await db
         .update(accounts)
         .set({
           connectionId,
+          identificationHash: account.identificationHash || sql`${accounts.identificationHash}`,
           alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
           currency: account.currency
         })
@@ -115,6 +136,7 @@ async function handleCallbackCore(
           id: account.uid,
           connectionId,
           iban: account.iban || null,
+          identificationHash: account.identificationHash || null,
           alias: account.name || null,
           currency: account.currency,
           lastBalance: null,
@@ -125,6 +147,7 @@ async function handleCallbackCore(
           set: {
             connectionId,
             iban: account.iban || null,
+            identificationHash: account.identificationHash || sql`${accounts.identificationHash}`,
             alias: account.name || null,
             currency: account.currency
           }
