@@ -129,26 +129,48 @@ export class SyncService {
           }
 
           try {
-            await this.db
-              .insert(accounts)
-              .values({
-                id: account.uid,
-                connectionId: conn.id,
-                iban: account.iban || null,
-                alias: account.name || null,
-                currency: account.currency,
-                lastBalance: null,
-                syncedAt: null
-              })
-              .onConflictDoUpdate({
-                target: accounts.id,
-                set: {
+            const [existingAccount] = account.iban
+              ? await this.db
+                  .select({ id: accounts.id })
+                  .from(accounts)
+                  .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+                  .where(and(eq(bankConnections.userId, conn.userId), eq(accounts.iban, account.iban)))
+                  .limit(1)
+              : [null];
+
+            const targetAccountId = existingAccount ? existingAccount.id : account.uid;
+
+            if (existingAccount) {
+              await this.db
+                .update(accounts)
+                .set({
                   connectionId: conn.id,
-                  iban: sql`COALESCE(${account.iban || null}, ${accounts.iban})`,
                   alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
                   currency: account.currency
-                }
-              });
+                })
+                .where(eq(accounts.id, targetAccountId));
+            } else {
+              await this.db
+                .insert(accounts)
+                .values({
+                  id: targetAccountId,
+                  connectionId: conn.id,
+                  iban: account.iban || null,
+                  alias: account.name || null,
+                  currency: account.currency,
+                  lastBalance: null,
+                  syncedAt: null
+                })
+                .onConflictDoUpdate({
+                  target: accounts.id,
+                  set: {
+                    connectionId: conn.id,
+                    iban: sql`COALESCE(${account.iban || null}, ${accounts.iban})`,
+                    alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
+                    currency: account.currency
+                  }
+                });
+            }
 
             let lastBalanceJson: string | null = null;
             try {
@@ -161,7 +183,7 @@ export class SyncService {
             const [latestTx] = await this.db
               .select({ maxBooked: sql<string | null>`MAX(${transactions.bookedAt})` })
               .from(transactions)
-              .where(eq(transactions.accountId, account.uid));
+              .where(eq(transactions.accountId, targetAccountId));
 
             const fromDate = latestTx?.maxBooked ? latestTx.maxBooked.split("T")[0] : undefined;
             const txList = await this.adapter.getTransactions(account.uid, sessionId, fromDate);
@@ -171,17 +193,17 @@ export class SyncService {
               const initialCategory = engine.evaluate({
                 description: tx.description || null,
                 amount: tx.amount,
-                accountId: account.uid
+                accountId: targetAccountId
               });
               const sourceId = tx.id;
-              const compositeId = `${account.uid}::${sourceId}`;
+              const compositeId = `${targetAccountId}::${sourceId}`;
 
               const res = await this.db
                 .insert(transactions)
                 .values({
                   id: compositeId,
                   sourceId: sourceId,
-                  accountId: account.uid,
+                  accountId: targetAccountId,
                   amount: tx.amount,
                   currency: tx.currency,
                   description: tx.description || null,
@@ -206,7 +228,7 @@ export class SyncService {
                 lastBalance: lastBalanceJson,
                 syncedAt: now
               })
-              .where(eq(accounts.id, account.uid));
+              .where(eq(accounts.id, targetAccountId));
           } catch (accErr: unknown) {
             const accErrMsg = accErr instanceof Error ? accErr.message : String(accErr);
             console.error(`[SyncService] Error syncing account ${account.uid}:`, accErrMsg);

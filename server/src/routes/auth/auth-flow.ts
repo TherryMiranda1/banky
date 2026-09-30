@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import { getBankingAdapter } from "../../core/infra/adapterFactory.js";
 import { stateStore } from "../../services/state-store.js";
 import { encrypt } from "../../services/crypto.js";
-import { getDb, bankConnections, accounts } from "../../db/index.js";
+import { getDb, bankConnections, accounts, and, eq, sql } from "../../db/index.js";
 import { BadRequestError } from "../../errors/AppError.js";
 import { requireAuth } from "../../middleware/auth.js";
 import { getRuntimeEnv } from "../../env.js";
@@ -65,6 +65,17 @@ async function handleCallbackCore(
 
   const db = getDb();
 
+  await db
+    .update(bankConnections)
+    .set({ status: "expired" })
+    .where(
+      and(
+        eq(bankConnections.userId, userId),
+        eq(bankConnections.aspspName, stateData.aspspName),
+        eq(bankConnections.status, "active")
+      )
+    );
+
   await db.insert(bankConnections).values({
     id: connectionId,
     userId,
@@ -79,26 +90,46 @@ async function handleCallbackCore(
   });
 
   for (const account of sessionData.accounts) {
-    await db
-      .insert(accounts)
-      .values({
-        id: account.uid,
-        connectionId,
-        iban: account.iban || null,
-        alias: account.name || null,
-        currency: account.currency,
-        lastBalance: null,
-        syncedAt: null
-      })
-      .onConflictDoUpdate({
-        target: accounts.id,
-        set: {
+    const [existingAccount] = account.iban
+      ? await db
+          .select({ id: accounts.id })
+          .from(accounts)
+          .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+          .where(and(eq(bankConnections.userId, userId), eq(accounts.iban, account.iban)))
+          .limit(1)
+      : [null];
+
+    if (existingAccount) {
+      await db
+        .update(accounts)
+        .set({
+          connectionId,
+          alias: sql`COALESCE(${account.name || null}, ${accounts.alias})`,
+          currency: account.currency
+        })
+        .where(eq(accounts.id, existingAccount.id));
+    } else {
+      await db
+        .insert(accounts)
+        .values({
+          id: account.uid,
           connectionId,
           iban: account.iban || null,
           alias: account.name || null,
-          currency: account.currency
-        }
-      });
+          currency: account.currency,
+          lastBalance: null,
+          syncedAt: null
+        })
+        .onConflictDoUpdate({
+          target: accounts.id,
+          set: {
+            connectionId,
+            iban: account.iban || null,
+            alias: account.name || null,
+            currency: account.currency
+          }
+        });
+    }
   }
 
   try {
