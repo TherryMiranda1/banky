@@ -12,6 +12,7 @@ import { Connect } from "@/pages/Connect";
 import { AccountDetail } from "@/pages/AccountDetail";
 import { CategoriesPage } from "@/pages/CategoriesPage";
 import { BudgetsPage } from "@/pages/BudgetsPage";
+import { ApiKeysPage } from "@/pages/ApiKeysPage";
 import { CheckCircle2, X } from "lucide-react";
 
 const AppContent: React.FC = () => {
@@ -77,6 +78,7 @@ const AppContent: React.FC = () => {
                 <Route path="/accounts/:id" element={<AccountDetail />} />
                 <Route path="/budgets" element={<BudgetsPage />} />
                 <Route path="/categories" element={<CategoriesPage />} />
+                <Route path="/api-keys" element={<ApiKeysPage />} />
                 <Route path="/connect" element={<Connect />} />
                 <Route path="*" element={<Dashboard />} />
               </Routes>

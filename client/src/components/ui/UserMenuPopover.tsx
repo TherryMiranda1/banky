@@ -10,7 +10,8 @@ import {
   ChevronDown,
   CheckCircle,
   RotateCcw,
-  Sparkles
+  Sparkles,
+  Key
 } from "lucide-react";
 
 import { formatFirstName } from "@/lib/format-utils";
@@ -141,6 +142,15 @@ export const UserMenuPopover: React.FC<UserMenuPopoverProps> = ({ onOpenCutoffMo
             >
               <Tags className="w-4 h-4 text-muted group-hover:text-text" />
               <span>Categorías y Reglas</span>
+            </Link>
+
+            <Link
+              to="/api-keys"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-border/40 text-xs font-medium text-text transition-colors"
+            >
+              <Key className="w-4 h-4 text-muted group-hover:text-text" />
+              <span>API Keys & Scripts</span>
             </Link>
 
             <Link

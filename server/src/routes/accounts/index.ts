@@ -13,6 +13,7 @@ import {
 import { NotFoundError, BadRequestError } from "../../errors/AppError.js";
 import { queryTransactions } from "../transactions/index.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireScope } from "../../middleware/scopes.js";
 import {
   AccountBalanceSchema,
   AccountSchema,
@@ -31,7 +32,7 @@ export { AccountBalanceSchema, AccountSchema, type AccountResponse };
 
 export const accountsRouter = new Hono();
 
-accountsRouter.use("*", requireAuth);
+accountsRouter.use("*", requireAuth, requireScope("accounts:read"));
 
 // Mount sub-routers
 accountsRouter.route("/connections", connectionsRouter);

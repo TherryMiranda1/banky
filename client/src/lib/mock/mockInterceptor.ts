@@ -264,5 +264,52 @@ export async function handleMockRequest<T>(
     return mockStorage.getKingdomState(period) as T;
   }
 
+  // API Keys
+  if (path === "/api-keys") {
+    if (method === "GET") {
+      const stored = localStorage.getItem("banky_mock_api_keys");
+      return (stored ? JSON.parse(stored) : []) as T;
+    }
+    if (method === "POST") {
+      const stored = localStorage.getItem("banky_mock_api_keys");
+      const list = stored ? JSON.parse(stored) : [];
+      const id = `apk_mock_${Date.now()}`;
+      const randomHex = Math.random().toString(36).substring(2, 15);
+      const rawKey = `bky_live_demo_${randomHex}`;
+      const keyPrefix = rawKey.slice(0, 16);
+      const created = {
+        id,
+        name: body.name || "Demo Key",
+        key: rawKey,
+        keyPrefix,
+        scopes: body.scopes || ["accounts:read"],
+        expiresAt: new Date(Date.now() + (body.expiresInDays || 90) * 86400000).toISOString(),
+        createdAt: new Date().toISOString()
+      };
+      list.unshift({
+        id,
+        name: created.name,
+        keyPrefix,
+        scopes: created.scopes,
+        expiresAt: created.expiresAt,
+        lastUsedAt: null,
+        revokedAt: null,
+        createdAt: created.createdAt
+      });
+      localStorage.setItem("banky_mock_api_keys", JSON.stringify(list));
+      return created as T;
+    }
+  }
+  if (path.startsWith("/api-keys/") && method === "DELETE") {
+    const id = path.replace("/api-keys/", "");
+    const stored = localStorage.getItem("banky_mock_api_keys");
+    const list = stored ? JSON.parse(stored) : [];
+    const updated = list.map((k: any) =>
+      k.id === id ? { ...k, revokedAt: new Date().toISOString() } : k
+    );
+    localStorage.setItem("banky_mock_api_keys", JSON.stringify(updated));
+    return { success: true, id } as T;
+  }
+
   throw new Error(`Mock handler for ${method} ${path} not implemented`);
 }

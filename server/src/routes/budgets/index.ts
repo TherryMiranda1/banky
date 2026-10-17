@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireScope } from "../../middleware/scopes.js";
 import { BadRequestError } from "../../errors/AppError.js";
 import { BudgetAnalyticsService } from "../../services/budget-analytics.service.js";
 import {
@@ -10,7 +11,7 @@ import {
 } from "./types.js";
 
 export const budgetsRouter = new Hono();
-budgetsRouter.use("*", requireAuth);
+budgetsRouter.use("*", requireAuth, requireScope("budgets:read"));
 
 // GET /budgets?period=YYYY-MM - List category budgets with historical fallback inheritance
 budgetsRouter.get(
@@ -47,7 +48,7 @@ budgetsRouter.put(
 );
 
 export const analyticsRouter = new Hono();
-analyticsRouter.use("*", requireAuth);
+analyticsRouter.use("*", requireAuth, requireScope("budgets:read"));
 
 // GET /analytics/categories?period=YYYY-MM - Compute category analytics and savings summary in Drizzle
 analyticsRouter.get(

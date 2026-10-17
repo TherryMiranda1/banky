@@ -22,6 +22,7 @@ import {
 } from "../../db/index.js";
 import { BadRequestError, NotFoundError } from "../../errors/AppError.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireScope } from "../../middleware/scopes.js";
 import { BillingCycleService } from "../../core/domain/billing-cycle.service.js";
 import { extractSuggestedPattern } from "./pattern-helper.js";
 import { getMccInfo } from "../../core/domain/mcc-dictionary.js";
@@ -348,6 +349,7 @@ transactionsRouter.use("*", requireAuth);
 
 transactionsRouter.get(
   "/",
+  requireScope("transactions:read"),
   zValidator("query", TransactionsQuerySchema, (result) => {
     if (!result.success) {
       const firstIssue = result.error.issues[0];
@@ -369,6 +371,7 @@ transactionsRouter.get(
 // POST /transactions - Create a manual transaction (e.g. cash or manual entry)
 transactionsRouter.post(
   "/",
+  requireScope("transactions:write"),
   zValidator("json", CreateManualTransactionSchema, (result) => {
     if (!result.success) {
       const firstIssue = result.error.issues[0];
@@ -457,6 +460,7 @@ transactionsRouter.post(
 // PATCH /transactions/:id - Edit manual transaction
 transactionsRouter.patch(
   "/:id",
+  requireScope("transactions:write"),
   zValidator("json", UpdateManualTransactionSchema, (result) => {
     if (!result.success) {
       const firstIssue = result.error.issues[0];
@@ -524,35 +528,40 @@ transactionsRouter.patch(
 );
 
 // DELETE /transactions/:id - Delete a manual transaction
-transactionsRouter.delete("/:id", async (c) => {
-  const userId = c.get("userId");
-  const transactionId = c.req.param("id");
-  const db = getDb();
+transactionsRouter.delete(
+  "/:id",
+  requireScope("transactions:write"),
+  async (c) => {
+    const userId = c.get("userId");
+    const transactionId = c.req.param("id");
+    const db = getDb();
 
-  const [txRow] = await db
-    .select({
-      id: transactions.id,
-      accountId: transactions.accountId
-    })
-    .from(transactions)
-    .innerJoin(accounts, eq(transactions.accountId, accounts.id))
-    .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
-    .where(and(eq(transactions.id, transactionId), eq(bankConnections.userId, userId)))
-    .limit(1);
+    const [txRow] = await db
+      .select({
+        id: transactions.id,
+        accountId: transactions.accountId
+      })
+      .from(transactions)
+      .innerJoin(accounts, eq(transactions.accountId, accounts.id))
+      .innerJoin(bankConnections, eq(accounts.connectionId, bankConnections.id))
+      .where(and(eq(transactions.id, transactionId), eq(bankConnections.userId, userId)))
+      .limit(1);
 
-  if (!txRow) {
-    throw new NotFoundError(`Transaction with id '${transactionId}' not found`);
+    if (!txRow) {
+      throw new NotFoundError(`Transaction with id '${transactionId}' not found`);
+    }
+
+    await db.delete(transactions).where(eq(transactions.id, transactionId));
+    await recalculateAccountBalance(txRow.accountId, db);
+
+    return c.json({ success: true, id: transactionId });
   }
-
-  await db.delete(transactions).where(eq(transactions.id, transactionId));
-  await recalculateAccountBalance(txRow.accountId, db);
-
-  return c.json({ success: true, id: transactionId });
-});
+);
 
 // PATCH /transactions/:id/category - Atomically update transaction category with userId scoping
 transactionsRouter.patch(
   "/:id/category",
+  requireScope("transactions:write"),
   zValidator("json", UpdateCategoryBodySchema, (result) => {
     if (!result.success) {
       const firstIssue = result.error.issues[0];
@@ -624,7 +633,7 @@ transactionsRouter.patch(
 );
 
 // POST /transactions/:id/suggest-rule - Generate suggested regex pattern from transaction description
-transactionsRouter.post("/:id/suggest-rule", async (c) => {
+transactionsRouter.post("/:id/suggest-rule", requireScope("transactions:read"), async (c) => {
   const userId = c.get("userId");
   const transactionId = c.req.param("id");
   const db = getDb();

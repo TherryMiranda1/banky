@@ -19,6 +19,7 @@ Antes de cualquier trabajo, leer:
 - **Frontend:** React 19 + Vite + React Router DOM v7 + Tailwind CSS v4
 - **Seguridad & Auth:** 
   - Autenticación multi-tenant con JWT HS256 (`hono/jwt`) y expiración de 7 días
+  - Acceso programático vía API keys (`bky_live_...`) con SHA-256, expiración configurable y scopes (`accounts:read`, `transactions:*`, etc.)
   - Hashing de contraseñas con Web Crypto API PBKDF2-HMAC-SHA256 (100.000 iteraciones + salt aleatorio)
   - Firma RS256 para tokens de Enable Banking
   - Cifrado simétrico AES-256-GCM para `session_id` bancarios en base de datos
@@ -77,6 +78,7 @@ Antes de cualquier trabajo, leer:
 ### Server (`out/banky/server`)
 - `npm run dev` — Servidor Hono en modo watch local (:3001)
 - `npx tsc --noEmit` — Typecheck estricto de TypeScript
+- `npm run test:api-keys` — Tests de integración y aislamiento de API keys
 - `npm run deploy` — Desplegar Worker a Cloudflare Workers
 - `npx wrangler d1 execute banky-db --remote --file=src/db/schema.sql` — Migrar esquema a Cloudflare D1 en producción
 

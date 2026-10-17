@@ -11,6 +11,7 @@ import {
 } from "../../db/index.js";
 import { NotFoundError } from "../../errors/AppError.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireJwtOnly } from "../../middleware/scopes.js";
 import { ConnectionParamSchema } from "./accounts-types.js";
 import { mapAccountRow } from "./accounts-helpers.js";
 import { getBankingAdapter } from "../../core/infra/adapterFactory.js";
@@ -18,7 +19,7 @@ import { decrypt } from "../../services/crypto.js";
 
 export const connectionsRouter = new Hono();
 
-connectionsRouter.use("*", requireAuth);
+connectionsRouter.use("*", requireAuth, requireJwtOnly);
 
 connectionsRouter.get("/", async (c) => {
   const userId = c.get("userId");

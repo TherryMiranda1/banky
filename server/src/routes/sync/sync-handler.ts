@@ -2,13 +2,14 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { SyncService } from "../../services/sync.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireScope } from "../../middleware/scopes.js";
 
 const syncBodySchema = z.record(z.unknown()).optional().default({});
 
 export const syncHandlerRouter = new Hono();
 const syncService = new SyncService();
 
-syncHandlerRouter.use("*", requireAuth);
+syncHandlerRouter.use("*", requireAuth, requireScope("sync:write"));
 
 syncHandlerRouter.post("/", async (c) => {
   const userId = c.get("userId");

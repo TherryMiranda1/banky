@@ -12,6 +12,7 @@ import { categoriesRouter } from "./routes/categories/index.js";
 import { budgetsRouter, analyticsRouter } from "./routes/budgets/index.js";
 import { kingdomRouter } from "./routes/kingdom/index.js";
 import { usersRouter } from "./routes/users/index.js";
+import { apiKeysRouter } from "./routes/api-keys/index.js";
 import { generateEnableBankingJwt } from "./services/jwt.js";
 
 import { setRuntimeEnv } from "./env.js";
@@ -63,6 +64,7 @@ app.route("/budgets", budgetsRouter);
 app.route("/analytics", analyticsRouter);
 app.route("/kingdom", kingdomRouter);
 app.route("/users", usersRouter);
+app.route("/api-keys", apiKeysRouter);
 
 app.onError((err, c) => {
   if (err instanceof AppError) {

@@ -8,6 +8,7 @@ import { encrypt } from "../../services/crypto.js";
 import { getDb, bankConnections, accounts, and, eq, sql } from "../../db/index.js";
 import { BadRequestError } from "../../errors/AppError.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireJwtOnly } from "../../middleware/scopes.js";
 import { getRuntimeEnv } from "../../env.js";
 import { SyncService } from "../../services/sync.js";
 
@@ -169,7 +170,7 @@ async function handleCallbackCore(
   };
 }
 
-authFlowRouter.post("/start", requireAuth, zValidator("json", startAuthSchema), async (c) => {
+authFlowRouter.post("/start", requireAuth, requireJwtOnly, zValidator("json", startAuthSchema), async (c) => {
   const { aspspName, aspspCountry, logoUrl } = c.req.valid("json");
   const userId = c.get("userId");
 

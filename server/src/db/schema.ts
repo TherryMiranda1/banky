@@ -148,6 +148,26 @@ export const categoryBudgets = sqliteTable(
   ]
 );
 
+export const apiKeys = sqliteTable(
+  "api_keys",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    keyPrefix: text("key_prefix").notNull(),
+    keyHash: text("key_hash").notNull().unique(),
+    scopes: text("scopes").notNull(),
+    expiresAt: text("expires_at"),
+    lastUsedAt: text("last_used_at"),
+    revokedAt: text("revoked_at"),
+    createdAt: text("created_at").notNull().default(sql`(datetime('now'))`)
+  },
+  (table) => [
+    index("idx_api_keys_user").on(table.userId),
+    uniqueIndex("idx_api_keys_hash").on(table.keyHash)
+  ]
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
@@ -168,6 +188,9 @@ export type NewCategorizationRule = typeof categorizationRules.$inferInsert;
 
 export type CategoryBudget = typeof categoryBudgets.$inferSelect;
 export type NewCategoryBudget = typeof categoryBudgets.$inferInsert;
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
 
 export function runMigrations(db: Database.Database): void {
   db.pragma("foreign_keys = ON");
@@ -350,5 +373,19 @@ export function runMigrations(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_categorization_rules_account ON categorization_rules(account_id);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_budgets_user_period ON category_budgets(user_id, category_id, period);
     CREATE INDEX IF NOT EXISTS idx_budgets_user_period_lookup ON category_budgets(user_id, period);
+    CREATE TABLE IF NOT EXISTS api_keys (
+      id           TEXT PRIMARY KEY,
+      user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name         TEXT NOT NULL,
+      key_prefix   TEXT NOT NULL,
+      key_hash     TEXT NOT NULL UNIQUE,
+      scopes       TEXT NOT NULL,
+      expires_at   TEXT,
+      last_used_at TEXT,
+      revoked_at   TEXT,
+      created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_api_keys_user ON api_keys(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
   `);
 }

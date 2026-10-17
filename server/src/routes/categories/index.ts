@@ -16,13 +16,14 @@ import {
   inArray
 } from "../../db/index.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireScope } from "../../middleware/scopes.js";
 import { BadRequestError, NotFoundError, ConflictError } from "../../errors/AppError.js";
 import { seedDefaultCategoriesIfEmpty } from "../../services/categories-seed.js";
 import { CategorizationEngine } from "../../core/domain/categorization-engine.js";
 
 export const categoriesRouter = new Hono();
 
-categoriesRouter.use("*", requireAuth);
+categoriesRouter.use("*", requireAuth, requireScope("categories:read"));
 
 const CreateCategorySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(50),

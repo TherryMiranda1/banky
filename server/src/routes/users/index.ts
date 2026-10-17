@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { getDb, users, eq } from "../../db/index.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireJwtOnly } from "../../middleware/scopes.js";
 import { BadRequestError, NotFoundError } from "../../errors/AppError.js";
 
 const UpdatePreferencesSchema = z.object({
@@ -14,7 +15,7 @@ const UpdatePreferencesSchema = z.object({
 
 export const usersRouter = new Hono();
 
-usersRouter.use("*", requireAuth);
+usersRouter.use("*", requireAuth, requireJwtOnly);
 
 usersRouter.get("/preferences", async (c) => {
   const userId = c.get("userId");

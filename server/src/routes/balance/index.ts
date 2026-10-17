@@ -9,12 +9,13 @@ import {
   isNotNull
 } from "../../db/index.js";
 import { requireAuth } from "../../middleware/auth.js";
+import { requireScope } from "../../middleware/scopes.js";
 
 export const TotalBalanceResponseSchema = z.record(z.string(), z.string());
 
 export const balanceRouter = new Hono();
 
-balanceRouter.use("*", requireAuth);
+balanceRouter.use("*", requireAuth, requireScope("balance:read"));
 
 balanceRouter.get("/total", async (c) => {
   const userId = c.get("userId");
