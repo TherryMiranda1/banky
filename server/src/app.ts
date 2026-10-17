@@ -13,6 +13,8 @@ import { budgetsRouter, analyticsRouter } from "./routes/budgets/index.js";
 import { kingdomRouter } from "./routes/kingdom/index.js";
 import { usersRouter } from "./routes/users/index.js";
 import { apiKeysRouter } from "./routes/api-keys/index.js";
+import { docsRouter } from "./docs/index.js";
+import { openApiSpec } from "./docs/openapi-spec.js";
 import { generateEnableBankingJwt } from "./services/jwt.js";
 
 import { setRuntimeEnv } from "./env.js";
@@ -49,9 +51,25 @@ app.use(
   })
 );
 
+app.get("/", (c) => {
+  return c.json({
+    name: "Banky Open Banking API",
+    status: "online",
+    docs: "/docs",
+    openapi: "/openapi.json",
+    health: "/health"
+  });
+});
+
 app.get("/health", (c) => {
   return c.json({ ok: true });
 });
+
+app.get("/openapi.json", (c) => {
+  return c.json(openApiSpec);
+});
+
+app.route("/docs", docsRouter);
 
 app.route("/auth", authRouter);
 app.route("/aspsps", aspspsRouter);

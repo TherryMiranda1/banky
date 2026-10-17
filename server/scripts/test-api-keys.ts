@@ -201,7 +201,26 @@ async function runApiKeysTests() {
   });
   assert.strictEqual(eleventhRes.status, 400, "11th active key must be rejected with 400 limit reached");
 
-  console.log("=== All API Key Tests Passed Successfully! ===");
+  // [10] Test API Discovery, OpenAPI spec and Swagger UI routes
+  console.log("[10] Testing API Discovery, OpenAPI spec and Swagger UI...");
+  const rootRes = await app.request("/");
+  assert.strictEqual(rootRes.status, 200);
+  const rootData = (await rootRes.json()) as { docs: string; openapi: string };
+  assert.strictEqual(rootData.docs, "/docs");
+  assert.strictEqual(rootData.openapi, "/openapi.json");
+
+  const openApiRes = await app.request("/openapi.json");
+  assert.strictEqual(openApiRes.status, 200);
+  const specData = (await openApiRes.json()) as { openapi: string; info: { title: string } };
+  assert.strictEqual(specData.openapi, "3.1.0");
+  assert.strictEqual(specData.info.title, "Banky Open Banking API");
+
+  const docsRes = await app.request("/docs");
+  assert.strictEqual(docsRes.status, 200);
+  const docsHtml = await docsRes.text();
+  assert.ok(docsHtml.includes("swagger-ui"), "Docs endpoint must render Swagger UI");
+
+  console.log("=== All API Key & Documentation Tests Passed Successfully! ===");
 }
 
 runApiKeysTests().catch((err) => {

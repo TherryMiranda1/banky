@@ -238,24 +238,42 @@ docker run -d \
 
 ---
 
-## 📡 API Endpoints
+## 📡 API Endpoints & Interactive Docs
 
-| Method | Endpoint | Description | Auth Required |
+Interactive API documentation and schema specifications are exposed out of the box:
+- **Interactive Swagger UI:** [`https://api.banky.therry.dev/docs`](https://api.banky.therry.dev/docs)
+- **OpenAPI 3.1.0 Specification:** [`https://api.banky.therry.dev/openapi.json`](https://api.banky.therry.dev/openapi.json)
+- **Service Discovery:** [`https://api.banky.therry.dev/`](https://api.banky.therry.dev/)
+
+| Method | Endpoint | Description | Auth Required / Scopes |
 |---|---|---|---|
+| `GET` | `/` | API discovery and documentation links | No |
+| `GET` | `/docs` | Interactive Swagger UI API documentation | No |
+| `GET` | `/openapi.json` | OpenAPI 3.1.0 specification schema | No |
 | `GET` | `/health` | Service healthcheck & status | No |
 | `POST` | `/auth/register` | Register a new multi-tenant user | No |
 | `POST` | `/auth/login` | Authenticate and receive JWT | No |
-| `GET` | `/auth/banks` | List supported banks for country | Yes |
-| `POST` | `/auth/connect` | Initiate OAuth consent flow | Yes |
-| `POST` | `/auth/callback` | Exchange OAuth code for session | Yes |
-| `POST` | `/sync` | Trigger account & transaction sync | Yes |
-| `GET` | `/balance` | Global consolidated balances | Yes |
-| `GET` | `/accounts` | Connected accounts & computed balances | Yes |
-| `GET` | `/accounts/:id` | Specific account details | Yes |
-| `GET` | `/transactions` | Paginated transactions with search & filters | Yes |
-| `GET` | `/categories` | List user categories & rules | Yes |
-| `POST` | `/categories` | Create or update category rule | Yes |
-| `GET` | `/budgets` | User budgets & category analytics | Yes |
+| `GET` | `/auth/me` | Current authenticated user profile | JWT |
+| `POST` | `/auth/start` | Initiate OAuth consent flow with bank | JWT |
+| `POST` | `/auth/callback` | Exchange OAuth code for session | JWT |
+| `GET` | `/aspsps` | List supported ASPSP banks by country | No |
+| `POST` | `/sync` | Trigger account & transaction sync | JWT / `sync:write` |
+| `GET` | `/balance/total` | Global consolidated balances by currency | JWT / `balance:read` |
+| `GET` | `/accounts` | Connected accounts & computed balances | JWT / `accounts:read` |
+| `GET` | `/accounts/:id` | Specific account details | JWT / `accounts:read` |
+| `POST` | `/accounts/cash` | Create/initialize cash account vault | JWT / `accounts:read` |
+| `GET` | `/transactions` | Paginated transactions with search & filters | JWT / `transactions:read` |
+| `POST` | `/transactions` | Create manual/cash expense or income | JWT / `transactions:write` |
+| `PATCH` | `/transactions/:id` | Update manual transaction details | JWT / `transactions:write` |
+| `DELETE` | `/transactions/:id` | Delete manual transaction | JWT / `transactions:write` |
+| `PATCH` | `/transactions/:id/category` | Assign or update transaction category | JWT / `transactions:write` |
+| `POST` | `/transactions/:id/suggest-rule` | Generate regex pattern from transaction | JWT / `transactions:read` |
+| `GET` | `/categories` | List user categories and rules | JWT / `categories:read` |
+| `GET` | `/budgets` | User budgets & historical inheritance | JWT / `budgets:read` |
+| `GET` | `/analytics/categories` | Monthly category spending analytics | JWT / `budgets:read` |
+| `GET` | `/api-keys` | List user's API Keys with prefixes & scopes | JWT |
+| `POST` | `/api-keys` | Create scoped API Key (token shown once) | JWT |
+| `DELETE` | `/api-keys/:id` | Revoke an API Key | JWT |
 
 ---
 
